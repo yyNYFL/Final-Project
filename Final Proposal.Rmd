@@ -21,8 +21,16 @@ Our website will explore rat sightings in NYC since 2018 across different boroug
 We foresee challenges in this project with git, reproducibility, and collaboration. We may also face challenges in how different boroughs and parts of the city are identified across different data sets used.
 
 Our tentative timeline:
-* Week of November 13: 
+* Week of November 13: project review meeting
+
 * Week of November 20: 
-* Week of November 27: 
-* Week of December 4: 
+ --by November 20: data cleaned and organized
+ --by November 25:completed exploratory analyses and visualizations 
+ 
+* Week of November 27: completed mapping, statistical analyses
+
+* Week of December 4: completed webpage, screencast, and report
+ --December 9–submission of report, webpage and screencast
+ --December 14–discuss projects in class
+
 
