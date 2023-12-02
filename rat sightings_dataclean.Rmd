@@ -16,25 +16,23 @@ library(readxl)
 library(dbplyr)
 ```
 
-# Problem 1
-## Cleaning pols-month
+## Cleaning rat sightings dataset
 
 ```{r import and clean obs, message = FALSE, warning=FALSE}
 
 rat_sightings = 
-  read_csv ("./Rat_Sightings.csv") |>
+  read_csv ("./data/Rat_Sightings.csv") |>
   janitor::clean_names(case = "snake") |>
   separate(created_date, sep="/", into = c("month", "day", "year")) |> 
   separate(year, sep=" ", into = c("year")) |>
   filter(borough != "STATEN ISLAND") |> 
   filter(year %in% c("2019", "2020", "2021", "2022", "2023")) |>
-  select(unique_key, month, day, year, location_type, incident_zip, city, borough, location)
-  
-
+  mutate(
+    borough_id = recode(
+      borough, 
+      "MANHATTAN" = 1,
+      "BRONX" =2,
+      "BROOKLYN"=3,
+      "QUEENS"= 4)) |>
+  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id)
 ```
-
-1 manhattan
-2 bronx
-3 brooklyn
-4 queens
-5 staten island
