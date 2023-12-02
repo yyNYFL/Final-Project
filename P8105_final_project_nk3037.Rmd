@@ -1,0 +1,16 @@
+---
+title: "P8105_final_project_nk3037"
+author: "Navya Koneripalli"
+date: "2023-12-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+
+```{r}
+waste_tonnage = read_csv("./data/DSNY_Monthly_Tonnage_Data_20231202.csv")
+```
+
