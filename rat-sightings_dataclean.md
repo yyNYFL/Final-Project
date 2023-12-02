@@ -7,6 +7,7 @@ Laura Robles-Torres
 library(tidyverse)
 library(tidyr)
 library(readxl)
+library(stringr)
 library(dbplyr)
 ```
 
@@ -27,5 +28,12 @@ rat_sightings =
       "BRONX" =2,
       "BROOKLYN"=3,
       "QUEENS"= 4)) |>
-  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id)
+  mutate(
+    month = as.numeric(month),
+    year = as.numeric(year)
+  ) |>
+  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id) |>
+  mutate(
+    borough = str_to_sentence(borough)
+  )
 ```
