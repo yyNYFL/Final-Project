@@ -5,9 +5,6 @@ date: "2023-12-02"
 output: github_document
 ---
 
-The goal of this rmd file is to create a plot of trash tonnage by borough!
-
-
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(readr)
@@ -22,7 +19,7 @@ library(ggplot2)
 rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(total_refuse))
 ```
 
-## plot 1
+## plot 1: trash by borough for 2022 and 2023
 ```{r}
 waste_tonnage_by_borough = rat_waste_filtered |> 
   group_by(borough) |> 
@@ -35,7 +32,7 @@ ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = t
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-## plot 2
+## plot 2: trash by borough & month
 ```{r}
 total_tonnage_by_borough_year_month = rat_waste_filtered |> 
   group_by(borough, year, month) |> 
@@ -50,6 +47,6 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
   theme_minimal()
 ```
 
-
+## plot 3: 
 
 
