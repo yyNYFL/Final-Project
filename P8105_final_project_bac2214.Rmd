@@ -47,6 +47,12 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
   theme_minimal()
 ```
 
-## plot 3: 
+## plot 3: attempting to plot map with tonnage by borough
+```{r}
+library(leaflet)
+library(sf)
+
+
+```
 
 
