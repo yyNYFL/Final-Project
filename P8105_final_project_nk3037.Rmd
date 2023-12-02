@@ -22,6 +22,7 @@ waste_tonnage = read_csv("./data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
   ) %>%
   filter(year %in% c(2022, 2023)) %>% 
   mutate(total_organics = resorganicstons + schoolorganictons) %>% 
+  rename(refusetonscollected = refuse_tons_collected)
   select(month, year, borough, borough_id, refusetonscollected, total_organics)
 ```
 
