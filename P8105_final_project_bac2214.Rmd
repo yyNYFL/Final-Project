@@ -1,0 +1,55 @@
+---
+title: "P8105_final_project_bac2214"
+author: "Brianna Carnagie"
+date: "2023-12-02"
+output: github_document
+---
+
+The goal of this rmd file is to create a plot of trash tonnage by borough!
+
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(readr)
+library(janitor)
+library(dplyr)
+library(ggplot2)
+```
+
+
+## filtering out the N/A's in a dataset
+```{r}
+rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(total_refuse))
+```
+
+## plot 1
+```{r}
+waste_tonnage_by_borough = rat_waste_filtered |> 
+  group_by(borough) |> 
+  summarise(total_tonnage = sum(total_organics + total_refuse))
+
+ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = total_tonnage)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(x = "Borough", y = "Trash Tonnage", title = "Trash Tonnage by Borough, 2022 - 2023") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## plot 2
+```{r}
+total_tonnage_by_borough_year_month = rat_waste_filtered |> 
+  group_by(borough, year, month) |> 
+  summarise(total_tonnage = sum(total_organics + total_refuse))
+
+total_tonnage_by_borough_year_month$year_month <- as.Date(paste(total_tonnage_by_borough_year_month$year, total_tonnage_by_borough_year_month$month, "01", sep = "-"))
+
+ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnage, group = borough, color = borough)) +
+  geom_line() +
+  labs(x = "Year-Month", y = "Trash Tonnage", title = "Trash Tonnage by Month and Borough") +
+  scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month") +
+  theme_minimal()
+```
+
+
+
+
