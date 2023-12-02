@@ -12,7 +12,7 @@ library(janitor)
 library(dplyr)
 ```
 
-
+### Data Cleaning for Waste Tonnage data
 ```{r}
 waste_tonnage = read_csv("./data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
   clean_names(case = "snake") %>%
@@ -30,5 +30,10 @@ waste_tonnage = waste_tonnage %>%
     total_organics = sum(total_organics, na.rm = TRUE),
     total_refuse = sum(refusetonscollected, na.rm = TRUE)
     )
+```
+
+### Merging rat sightings and waste tonnage data
+```{r}
+rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
 ```
 
