@@ -7,10 +7,28 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(readr)
+library(janitor)
+library(dplyr)
 ```
 
 
 ```{r}
-waste_tonnage = read_csv("./data/DSNY_Monthly_Tonnage_Data_20231202.csv")
+waste_tonnage = read_csv("./data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
+  clean_names(case = "snake") %>%
+  mutate(date_split = strsplit(month, "/")) %>%
+  mutate(
+    year = as.integer(sapply(date_split, function(x) x[1])),
+    month = as.integer(sapply(date_split, function(x) x[2]))
+  ) %>%
+  filter(year %in% c(2022, 2023)) %>% 
+  mutate(total_organics = resorganicstons + schoolorganictons)
+
+waste_tonnage = waste_tonnage %>% 
+  group_by(borough, month, year, borough_id) %>% 
+  summarise(
+    total_organics = sum(total_organics, na.rm = TRUE),
+    total_refuse = sum(refusetonscollected, na.rm = TRUE)
+    )
 ```
 
