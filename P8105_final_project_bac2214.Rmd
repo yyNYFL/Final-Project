@@ -52,7 +52,12 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
 library(leaflet)
 library(sf)
 
-
+rat_waste_filtered$location <- gsub("\\(|\\)", "", rat_waste_filtered$location) # Remove parentheses
+coordinates <- strsplit(rat_waste_filtered$location, ", ")
+sf_data <- st_as_sf(data.frame(
+  Latitude = as.numeric(sapply(coordinates, function(x) as.numeric(x[1]))),
+  Longitude = as.numeric(sapply(coordinates, function(x) as.numeric(x[2])))
+), coords = c("Longitude", "Latitude"), crs = 4326)
 ```
 
 
