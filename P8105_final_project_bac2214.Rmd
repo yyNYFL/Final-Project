@@ -11,6 +11,7 @@ library(readr)
 library(janitor)
 library(dplyr)
 library(ggplot2)
+library(stats)
 ```
 
 
@@ -50,16 +51,18 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
 
 ```
 
-## plot 3: attempting to plot map with tonnage by borough
+## plot 3: statistical test (ANOVA) to assess the differences in waste tonnage among the boroughs.
 ```{r}
-library(leaflet)
-library(sf)
 
+library(stats)
 
+anova_result_organics = aov(total_organics ~ borough, data = waste_tonnage) |> broom::tidy()
 
-
-
+anova_result_refuse = aov(total_refuse ~ borough, data = waste_tonnage) |> broom::tidy()
 
 ```
 
+The one-way ANOVA test was performed to assess the differences in organic waste tonnage among the boroughs. The ANOVA test revealed statistically significant differences in organic waste tonnage among the boroughs (F(4, 112) = 10.5, p < 0.05). 
+
+A one-way ANOVA test was conducted to examine the differences in refuse waste tonnage among the boroughs.The ANOVA test revealed statistically significant differences in refuse waste tonnage among the boroughs (F(4, 112) = 82.1, p < 0.001).
 
