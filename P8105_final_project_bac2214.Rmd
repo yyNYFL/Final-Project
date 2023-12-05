@@ -44,7 +44,7 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
   geom_line() +
   labs(x = "Year-Month", y = "Trash Tonnage", title = "Trash Tonnage by Month and Borough") +
   scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month") +
-  theme_minimal()
+  theme_minimal() + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 ## plot 3: attempting to plot map with tonnage by borough
