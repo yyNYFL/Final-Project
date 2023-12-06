@@ -1,5 +1,9 @@
 ---
-title: "Holy cow!"
+title: <div align="center"> Rat Sightings in NYC
+output: 
+  html_document:
+    toc: true
+    toc_float: true
 ---
 
 ### I have a webpage!
