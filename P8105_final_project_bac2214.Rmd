@@ -11,6 +11,7 @@ library(readr)
 library(janitor)
 library(dplyr)
 library(ggplot2)
+library(stats)
 ```
 
 
@@ -42,22 +43,26 @@ total_tonnage_by_borough_year_month$year_month <- as.Date(paste(total_tonnage_by
 
 ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnage, group = borough, color = borough)) +
   geom_line() +
-  labs(x = "Year-Month", y = "Trash Tonnage", title = "Trash Tonnage by Month and Borough") +
+  labs(x = "Year-Month", y = "Amount of Trash (in tons)", title = "Trash Tonnage by Month and Borough") +
   scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month") +
-  theme_minimal() + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  scale_y_continuous(labels = scales::number_format(scale = 1e-6)) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 ```
 
-## plot 3: attempting to plot map with tonnage by borough
+## plot 3: statistical test (ANOVA) to assess the differences in waste tonnage among the boroughs.
 ```{r}
-library(leaflet)
-library(sf)
 
-rat_waste_filtered$location <- gsub("\\(|\\)", "", rat_waste_filtered$location) # Remove parentheses
-coordinates <- strsplit(rat_waste_filtered$location, ", ")
-sf_data <- st_as_sf(data.frame(
-  Latitude = as.numeric(sapply(coordinates, function(x) as.numeric(x[1]))),
-  Longitude = as.numeric(sapply(coordinates, function(x) as.numeric(x[2])))
-), coords = c("Longitude", "Latitude"), crs = 4326)
+library(stats)
+
+anova_result_organics = aov(total_organics ~ borough, data = waste_tonnage) |> broom::tidy()
+
+anova_result_refuse = aov(total_refuse ~ borough, data = waste_tonnage) |> broom::tidy()
+
 ```
 
+The one-way ANOVA test was performed to assess the differences in organic waste tonnage among the boroughs. The ANOVA test revealed statistically significant differences in organic waste tonnage among the boroughs (F(4, 112) = 10.5, p < 0.05). 
+
+A one-way ANOVA test was conducted to examine the differences in refuse waste tonnage among the boroughs.The ANOVA test revealed statistically significant differences in refuse waste tonnage among the boroughs (F(4, 112) = 82.1, p < 0.001).
 
