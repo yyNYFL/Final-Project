@@ -1,0 +1,144 @@
+---
+title: "Final Project- Rat sighting by Borough"
+author: "Youssra Yemmas"
+date: "2023-12-05"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+library(knitr)
+library(janitor)
+library(ggplot2)
+library(plotly)
+
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+### One question we are interest in is how do the rat sightings differ over time and across boroughs
+```{r}
+rat_sightings = 
+  read_csv ("./data/Rat_Sightings.csv") |>
+  janitor::clean_names(case = "snake") |>
+  separate(created_date, sep="/", into = c("month", "day", "year")) |> 
+  separate(year, sep=" ", into = c("year")) |>
+  filter(borough != "STATEN ISLAND") |> 
+  filter(year %in% c("2019", "2020", "2021", "2022", "2023")) |>
+  mutate(
+    borough_id = recode(
+      borough, 
+      "MANHATTAN" = 1,
+      "BRONX" =2,
+      "BROOKLYN"=3,
+      "QUEENS"= 4)) |>
+  mutate(
+    month = as.numeric(month),
+    year = as.numeric(year)
+  ) |>
+  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id) |>
+  mutate(
+    borough = str_to_sentence(borough)
+  )
+
+summary(rat_sightings)
+variable_types <- sapply(rat_sightings, class)
+print(variable_types)
+# variables are not classified well for analysis so will need too convert numeric variables
+numeric_vars_to_convert <- c("unique_key", "month", "year", "incident_zip", "borough_id")
+
+rat_sightings <- rat_sightings %>% 
+  mutate(across(all_of(numeric_vars_to_convert), as.factor))
+        
+variable_types <- sapply(rat_sightings, class)
+print(variable_types)
+
+# number of rat sightings by boro each year
+rats_boro = rat_sightings %>% 
+  janitor::clean_names() %>% 
+  select(borough, year, unique_key) %>% 
+  group_by(borough, year) %>% 
+  count() %>% 
+  summarize(avg_rat_sightings = mean(n)) %>% 
+  ungroup %>% 
+  spread(key = year, value = avg_rat_sightings) %>% 
+  filter(borough != 'Unspecified')# I want to remove the unsepcified
+
+knitr::kable(rats_boro)
+  
+```
+
+We can see from the kable output that there was quite a substantial jump in rat sightings from 2020 to 2021 in all of the boroughs. This may be another COVID phenomena as restaurants shifted to more outdoor dining which deposited more food waste and other things that attract rats onto the streets during the pandemic and after the pandemic when indoor dining became less feasible. 
+
+### Are the differences we can see in average rate sighting across time and boroughs statistically significant? 
+```{r}
+# I will test the statistical difference of average rat sighting across boroughs
+anova1_data =rat_sightings %>% 
+  janitor::clean_names() %>% 
+  select(borough, unique_key) %>% 
+  group_by(borough) %>% 
+  count() %>% 
+  summarize(avg_rat_sightings = mean(n)) %>% 
+  filter(borough != 'Unspecified')
+
+
+anova_model1 <- aov(avg_rat_sightings ~ borough, data = anova1_data)
+
+# Print the summary to get F-statistic and p-value
+anova1_summary <- summary(anova_model1)
+print(anova1_summary)
+
+# Extract F-statistic and p-value
+f_statistic <- anova1_summary$`F value`[1]
+p_value <- anova1_summary$`Pr(>F)`[1]
+
+# Print the results
+cat("F-Statistic:", f_statistic, "\n")
+cat("P-Value:", p_value, "\n")
+
+```
+
+```{r}
+# I will test the statistical difference of average rat sightings acorss time from 2019-2023
+
+anova2_data = rat_sightings %>% 
+  janitor::clean_names() %>% 
+  select(year, unique_key) %>% 
+  group_by(year) %>% 
+  count() %>% 
+  summarize(avg_rat_sightings = mean(n)) 
+
+anova_model2 <- aov(avg_rat_sightings ~ year, data = anova2_data)
+
+# Print the summary to get F-statistic and p-value
+anova2_summary <- summary(anova_model2)
+print(anova1_summary)
+
+# Extract F-statistic and p-value
+f_statistic <- anova2_summary$`F value`[1]
+p_value <- anova2_summary$`Pr(>F)`[1]
+
+# Print the results
+cat("F-Statistic:", f_statistic, "\n")
+cat("P-Value:", p_value, "\n")
+```
+
+### Visualizations
+```{r}
+
+```
+
