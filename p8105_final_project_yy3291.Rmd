@@ -112,6 +112,17 @@ cat("P-Value:", p_value, "\n")
 
 ```
 
+```{r, brianna troubleshooting}
+rat_sightings_agg = rat_sightings |> 
+  group_by(year, borough, month) |> 
+  summarise(count = n())
+
+anova_result = aov(count ~ factor(year) * factor(borough), data = rat_sightings_agg) |> broom::tidy()
+
+anova_result_no_interaction = aov(count ~ factor(year) + factor(borough), data = rat_sightings_agg)|> broom::tidy()
+```
+
+
 ```{r}
 # I will test the statistical difference of average rat sightings acorss time from 2019-2023
 
