@@ -82,7 +82,7 @@ knitr::kable(rats_boro)
   
 ```
 
-We can see from the kable output that there was quite a substantial jump in rat sightings from 2020 to 2021 in all of the boroughs. This may be another COVID phenomena as restaurants shifted to more outdoor dining which deposited more food waste and other things that attract rats onto the streets during the pandemic and after the pandemic when indoor dining became less feasible. 
+We can see from the kable output that there was quite a substantial jump in rat sightings from 2020 to 2021 in all of the boroughs. This may be another COVID phenomena as restaurants shifted to more outdoor dining which deposited more food waste and other things that attract rats onto the streets during the pandemic and after the pandemic when indoor dining became less feasible. https://apnews.com/article/rats-new-york-9dc65afa66a3535cba01b1ea866973a1#:~:text=NEW%20YORK%20(AP)%20%E2%80%94%20They,so%20did%20the%20city's%20rats.
 
 ### Are the differences we can see in average rate sighting across time and boroughs statistically significant? 
 ```{r}
@@ -139,6 +139,30 @@ cat("P-Value:", p_value, "\n")
 
 ### Visualizations
 ```{r}
+viz1_data = rats_boro %>% 
+  pivot_longer(cols = starts_with("20"),
+               names_to = "Year",
+               values_to = "avg_rat_sightings"
+  )
+
+  ggplot(viz1_data, aes(x = Year, y = avg_rat_sightings)) +
+   geom_point(alpha = 0.3, size = 2) +
+   geom_line(size = 1, alpha = 0.6) +
+   facet_wrap(~borough, scales = "free_y") +
+     theme(legend.position = "bottom",
+         axis.text.y = element_text(color = "black", 
+                                    size = 10,  hjust = 1), 
+         axis.text.x = element_text(angle = 45, 
+                                    hjust = 1, size = 10)) +
+   labs(
+     x = "Year",
+     y = "Average Rat Sightings",
+     title = "Average Rate Sightings From 2019-2023 by Borough"
+   ) + 
+     viridis::scale_colour_viridis() 
+
+ 
+
 
 ```
 
