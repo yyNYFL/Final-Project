@@ -3,8 +3,8 @@ output_dir: "."
 navbar:
   title: "Introduction"
   right:
-    - text: "About"
-      href: about.html
+    - text: "Final Report"
+      href: final_report.html
     - icon: fa-envelope fa-lg
       href: mailto:<you@youremail.com>
     - icon: fa-github fa-lg
