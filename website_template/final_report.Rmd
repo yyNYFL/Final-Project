@@ -14,7 +14,13 @@ This project is also motivated by the need to evaluate public policy effectivene
 
 Last but certainly not least, the viral nature of New York City Sanitation Commissioner Jessica Tisch's declaration, "The rats don't run this city, we do," during the announcement of new rules for garbage disposal back in October 2022, significantly contributes to the motivation behind our project. This statement, which quickly became a social media sensation and inspired a wide array of TikTok videos and even merchandise, has heightened our interest in the issue of rat control in New York City.
 
-## Related work: Anything that inspired you, such as a paper, a web site, or something we discussed in class.
+
+```{r, echo=FALSE, out.width="40%", fig.cap="", fig.align = 'center'}
+knitr::include_graphics("rats_gonna_hate_this.png") 
+```
+
+## Related work:
+Anything that inspired you, such as a paper, a web site, or something we discussed in class.
 
 ## Initial questions: 
 What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?
