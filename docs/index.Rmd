@@ -30,5 +30,10 @@ The growing number of rat sightings are a public health issue. Rats are vectors 
 
 ## Data sources
 
+Data regarding rat sightings, including date, location, borough, and more, are from [NYC Open Data's 311 Rat Sightings](https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe). 
+
+Data regarding trash and waste are from [NYC Open Data's Monthly tonnage data for Department of Sanitation](https://data.cityofnewyork.us/City-Government/DSNY-Monthly-Tonnage-Data/ebb7-mvp5). 
+
+
 
 
