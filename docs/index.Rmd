@@ -31,9 +31,9 @@ The growing number of rat sightings are a public health issue. Rats are vectors 
 
 Collaborators and rat friends for this project:
 
-- (Brianna)[bcarnagie.github.io]
+- [Brianna](bcarnagie.github.io)
 - Jessie
-- (Laura)[lvr2115.github.io]
+- [Laura](lvr2115.github.io) (UNI: lvr2115)
 - Navya
 - Youssra
 
