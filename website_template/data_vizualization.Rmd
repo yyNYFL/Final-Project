@@ -1,0 +1,7 @@
+---
+title: "Data Visualization"
+---
+
+### Data Visualization
+
+we can put our visualizations here
