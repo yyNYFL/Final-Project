@@ -58,7 +58,7 @@ rat_sightings =
 summary(rat_sightings)
 variable_types <- sapply(rat_sightings, class)
 print(variable_types)
-# variables are not classified well for analysis so will need too convert numeric variables
+# variables are not classified well for analysis so will need to convert numeric variables
 numeric_vars_to_convert <- c("unique_key", "month", "year", "incident_zip", "borough_id")
 
 rat_sightings <- rat_sightings %>% 
@@ -86,67 +86,28 @@ We can see from the kable output that there was quite a substantial jump in rat 
 
 ### Are the differences we can see in average rate sighting across time and boroughs statistically significant? 
 ```{r}
-# I will test the statistical difference of average rat sighting across boroughs
-anova1_data =rat_sightings %>% 
-  janitor::clean_names() %>% 
-  select(borough, unique_key) %>% 
-  group_by(borough) %>% 
-  count() %>% 
-  summarize(avg_rat_sightings = mean(n)) %>% 
-  filter(borough != 'Unspecified')
+# I will test the statistical difference of average rat sighting across boroughs and across time.
 
 
-anova_model1 <- aov(avg_rat_sightings ~ borough, data = anova1_data)
-
-# Print the summary to get F-statistic and p-value
-anova1_summary <- summary(anova_model1)
-print(anova1_summary)
-
-# Extract F-statistic and p-value
-f_statistic <- anova1_summary$`F value`[1]
-p_value <- anova1_summary$`Pr(>F)`[1]
-
-# Print the results
-cat("F-Statistic:", f_statistic, "\n")
-cat("P-Value:", p_value, "\n")
-
-```
-
-```{r, brianna troubleshooting}
 rat_sightings_agg = rat_sightings |> 
   group_by(year, borough, month) |> 
+  filter(borough != "Unspecified") %>% 
   summarise(count = n())
 
 anova_result = aov(count ~ factor(year) * factor(borough), data = rat_sightings_agg) |> broom::tidy()
 
-anova_result_no_interaction = aov(count ~ factor(year) + factor(borough), data = rat_sightings_agg)|> broom::tidy()
-```
+anova_result_no_interaction = aov(count ~ factor(year) + factor(borough), data = rat_sightings_agg) |> broom::tidy()
 
-
-```{r}
-# I will test the statistical difference of average rat sightings acorss time from 2019-2023
-
-anova2_data = rat_sightings %>% 
-  janitor::clean_names() %>% 
-  select(year, unique_key) %>% 
-  group_by(year) %>% 
-  count() %>% 
-  summarize(avg_rat_sightings = mean(n)) 
-
-anova_model2 <- aov(avg_rat_sightings ~ year, data = anova2_data)
 
 # Print the summary to get F-statistic and p-value
-anova2_summary <- summary(anova_model2)
-print(anova1_summary)
+anova1_summary <- summary(anova_result)
+knitr::kable(anova1_summary)
 
-# Extract F-statistic and p-value
-f_statistic <- anova2_summary$`F value`[1]
-p_value <- anova2_summary$`Pr(>F)`[1]
-
-# Print the results
-cat("F-Statistic:", f_statistic, "\n")
-cat("P-Value:", p_value, "\n")
+anova2_summary <- summary(anova_result_no_interaction)
+knitr::kable(anova2_summary)
 ```
+
+
 
 ### Visualizations
 ```{r}
@@ -171,8 +132,25 @@ viz1_data = rats_boro %>%
      title = "Average Rate Sightings From 2019-2023 by Borough"
    ) + 
      viridis::scale_colour_viridis() 
-
+# I cannot seem to get the line to form so I will try it with a different data format 
+  
+ ggplot(rat_sightings_agg, aes(x = year, y = count)) +
+   geom_point(alpha = 0.3, size = 2) +
+   geom_line(size = 1, alpha = 0.6) +
+   facet_wrap(~borough, scales = "free_y") +
+     theme(legend.position = "bottom",
+         axis.text.y = element_text(color = "black", 
+                                    size = 10,  hjust = 1), 
+         axis.text.x = element_text(angle = 45, 
+                                    hjust = 1, size = 10)) +
+   labs(
+     x = "Year",
+     y = "Average Rat Sightings",
+     title = "Average Rate Sightings From 2019-2023 by Borough"
+   ) + 
+     viridis::scale_colour_viridis() 
  
+ # This graph is also not what I had in mind 
 
 
 ```
