@@ -1,0 +1,27 @@
+---
+title: <div align="center"> Meet the team!
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Brianna
+
+[Personal website](bcarnagie.github.io)
+
+### Jessie
+
+### Laura
+
+Laura is a 2nd year MPH candidate pursuing a certificate in Biostatistics. She thinks the rats definitely run this city. 
+
+[Personal website](lvr2115.github.io) 
+
+### Navya
+
+### Youssra
