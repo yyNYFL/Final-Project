@@ -1,0 +1,17 @@
+name: "Final Project: Rat Sightings in NYC"
+output_dir: "."
+navbar:
+  title: "Introduction"
+  right:
+    - text: "Final Report"
+      href: final_report.html
+    - text: "Exploratory Data Analysis"
+      href: eda.html
+    - text: "Data Visualization"
+      href: data_vizualization.html
+    - icon: fa-envelope fa-lg
+      href: mailto:<you@youremail.com>
+    - icon: fa-github fa-lg
+      href: https://github.com/yyNYFL/Final-Project
+output:
+  html_document
