@@ -1,0 +1,7 @@
+---
+title: "EDA"
+---
+
+### Exploratory Data Analysis
+
+all our statistical analysis can go here 
