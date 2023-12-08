@@ -9,6 +9,8 @@ navbar:
       href: data_vizualization.html
     - text: "Final Report"
       href: final_report.html
+    - text: "About the team"
+      href: about.html
     - icon: fa-envelope fa-lg
       href: mailto:<lvr2115@cumc.columbia.edu>
     - icon: fa-github fa-lg
