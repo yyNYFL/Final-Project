@@ -12,12 +12,12 @@ library(ggplot2)
 library(tidyverse)
 ```
 
-<div align="center">| 
+<div align="center">|
 <div align="center">| 
 <div align="center">|  
 
 ```{r, echo=FALSE, out.width="30%", fig.cap="", fig.align = 'center'}
-knitr::include_graphics("rats.png") 
+knitr::include_graphics("rats_gonna_hate_this.png") 
 ```
 
 <div align="left"> 
