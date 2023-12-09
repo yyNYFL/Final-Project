@@ -1,0 +1,21 @@
+---
+title: "Statistical Data Analysis"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+##  statistical analysis 1: statistical test (ANOVA) to assess the differences in waste tonnage among the boroughs.
+```{r}
+
+anova_result_organics = aov(total_organics ~ borough, data = waste_tonnage) |> broom::tidy()
+
+anova_result_refuse = aov(total_refuse ~ borough, data = waste_tonnage) |> broom::tidy()
+
+```
+
+The one-way ANOVA test was performed to assess the differences in organic waste tonnage among the boroughs. The ANOVA test revealed statistically significant differences in organic waste tonnage among the boroughs (F(4, 112) = 10.5, p < 0.05). 
+
+A one-way ANOVA test was conducted to examine the differences in refuse waste tonnage among the boroughs.The ANOVA test revealed statistically significant differences in refuse waste tonnage among the boroughs (F(4, 112) = 82.1, p < 0.001).
