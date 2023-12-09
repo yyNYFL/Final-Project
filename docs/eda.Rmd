@@ -55,7 +55,7 @@ In order to analyze rat sightings, we used 2 data sources from NYC Open Data: 31
 
 Variable `created_date` was separated to create three new variables to allow for analysis: `month`, `day`, `year`. 
 
-- Still need to describe variables, why we created borough_id. 
+Borough_id was serves as a numerical identifier for each borough, which can be useful for data management, especially when dealing with categorical data (like the boroughs) in statistical analyses or visualizations. 
 
 ```{r data cleaning waste, message = FALSE}
 waste_tonnage = read_csv("data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
@@ -75,7 +75,18 @@ waste_tonnage = waste_tonnage %>%
     total_refuse = sum(refusetonscollected, na.rm = TRUE)
     )
 ```
-- Describe waste data cleaning/tidying here
+
+## Waste Tonnage Data Cleaning
+
+To tidy up the waste tonnage data, we started by importing the Monthly Tonnage Data from the NYC Department of Sanitation. To make the data more manageable and consistent, we first applied the clean_names function. 
+
+Next, we focused on the date information. The month column initially contained combined year and month data, so we split it into two separate variables. We achieved this by using strsplit to separate the year and month, and then applied the sapply function to extract and convert these into individual year and month integer columns. 
+
+We decided to filter the dataset to include only the years 2022 and 2023. This filtering aligns our analysis with a more recent and relevant timeframe and allows for a smaller subset of the initial dataset.
+
+We then consolidated the data on organic waste, which was initially spread across different columns (resorganicstons and schoolorganictons). These represent residential organic tons and school organic tons. We summed these columns to create a new `total_organics` column, giving us a the total organic waste.
+
+Finally, we grouped the data by borough, month, year, and borough_id. This grouping allowed us to summarize the total organic waste and total refuse collected in each borough for each month and year, ensuring our analysis would capture the geographical and temporal variations in waste tonnage. We used summarise with na.rm = TRUE to handle any missing values effectively, ensuring that they did not skew our results.
 
 ```{r merging, include=FALSE}
 rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
