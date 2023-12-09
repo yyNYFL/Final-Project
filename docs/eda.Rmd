@@ -15,11 +15,11 @@ library(stats)
 library(tidyr)
 library(readxl)
 library(stringr)
-setwd("/Users/lvrt/Documents/Data Science I/Final Project - Laura")
+
 ```
 
 ```{r import and clean rat sightings, message = FALSE, warning=FALSE}
-setwd("/Users/lvrt/Documents/Data Science I/Final Project - Laura")
+
 
 rat_sightings = 
   read_csv ("./data/Rat_Sightings.csv") |>
@@ -108,7 +108,7 @@ ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = t
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-- Explain this figure
+Figure 1, titled "Trash Tonnage by Borough, 2022 - 2023," is a bar chart visualizing the total amount of trash (comprising both organics and refuse) collected in each borough of New York City over the years 2022 and 2023. From the chart, it is evident that *Brooklyn* has the highest total trash tonnage, shown by the tallest bar. The other boroughs—Queens, Manhattan, and the Bronx—are represented with progressively smaller bars, indicating a decrease in the total trash tonnage respectively. Staten Island is not included in the chart, which is consistent with the earlier note that data from Staten Island was excluded from the analysis due to significantly less data being available from that borough. The scientific notation on the y-axis was used for a concise representation of large numbers, indicating the vast scale of waste collected in across the boroughs. 
 
 ### Figure 2: Total Refuse and Total organics 
 ```{r figure 2, message = FALSE}
