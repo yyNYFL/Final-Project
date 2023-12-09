@@ -13,7 +13,7 @@
 
 <title>Final Report</title>
 
-<script src="site_libs/header-attrs-2.24/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.25/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/simplex.min.css" rel="stylesheet" />
@@ -297,6 +297,47 @@ $(document).ready(function () {
 </div>
 
 
+<pre class="r"><code>library(tidyverse)
+library(janitor)
+library(knitr)
+library(tidyr)
+library(readxl)
+library(lubridate)
+library(readr)
+library(stringr)
+library(ggplot2)
+library(tsibble)
+library(dbplyr)
+library(stats)
+library(plotly)
+library(ggridges)
+library(forecast)
+library(patchwork)
+library(dplyr)
+library(flexdashboard)
+library(leaflet)
+library(shiny)
+
+library(leaflet.providers)
+
+knitr::opts_chunk$set(
+    echo = TRUE,
+    warning = FALSE,
+    fig.width = 8, 
+  fig.height = 7,
+  out.width = &quot;90%&quot;
+)
+
+
+theme_set(theme_minimal() + theme(legend.position = &quot;bottom&quot;))
+
+options(
+  ggplot2.continuous.colour = &quot;viridis&quot;,
+  ggplot2.continuous.fill = &quot;viridis&quot;
+)
+
+scale_colour_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d</code></pre>
 <div id="motivation" class="section level2">
 <h2>Motivation</h2>
 <p>The primary goal of this project is to conduct a thorough analysis of
@@ -304,18 +345,46 @@ rat sightings in New York City, focusing on the periods before and after
 the implementation of new trash pickup times, which shifted from after 4
 pm to after 8 pm as of April 1, 2023. This change is part of Mayor Eric
 Adams’ rat mitigation strategies, and our study aims to assess its
-effectiveness. The motivation behind this research is rooted in the
-significant public health concerns associated with increased rat
-sightings, especially post-COVID-19. Rats are known vectors for various
-diseases and can contaminate human food sources, posing a considerable
-health risk.</p>
-<p>This project is also motivated by the need to evaluate public policy
-effectiveness, particularly in urban wildlife management. By comparing
-rat sighting data from different time periods and across various NYC
-neighborhoods, we aim to determine whether the change in trash disposal
-times has had a significant impact on the rat population. This analysis
-will not only contribute to public health knowledge but also offer
-insights for future urban management and rat mitigation strategies.</p>
+effectiveness.</p>
+<p>The motivation behind this research is rooted in the significant
+public health concerns associated with increased rat sightings,
+especially post-COVID-19. Rats are known vectors for various diseases
+and can contaminate human food sources, posing a considerable health
+risk. We like many New Yorkers see rats as a major problem given the
+health risks they pose. This problem has only worsened following the
+pandemic. New York City government agrees and has implemented and
+promoted a flashy new initiative they are calling “Send Rats Packing.”
+<a
+href="https://www.nyc.gov/assets/queenscb2/downloads/pdf/notices/2023/SetoutTimes-Residential-Flyer-2023-02.pdf"
+class="uri">https://www.nyc.gov/assets/queenscb2/downloads/pdf/notices/2023/SetoutTimes-Residential-Flyer-2023-02.pdf</a>
+This initiative is mainly composed of a new rule involving trash that
+aims to reduce the time that trash, recycling, and curbside composting
+will sit on the sidewalk. The new rule went into effect on April 1, 2023
+and left Residential buildings and their managers with two options
+-Place waste out after 6:00 PM in a container of 55 gallons or less with
+a secure lid or Place waste out after 8:00 PM, if putting bags directly
+on the curb. Although everyone wants to see rats gone not everyone is on
+board with this new rule and many are skeptical if it is actually going
+to result in less rats. The NYC Building Supers an organization composed
+of building maintenance workers like porters and supers across the 5
+boroughs has called this rule “outrageous and unfair” as it requires
+them to work 14 hour days just to comply with the new rule. They have
+banded together to strike this rule by engaging in city hall protests
+and acts of civil disobedience by not complying with the new trash time.
+<a href="https://nycbuildingsupers.com/"
+class="uri">https://nycbuildingsupers.com/</a> Given this backdrop and
+the general skepticism surrounding the effectiveness of the measure we
+were motivated to explore whether or not this trash time is reduced the
+presence of rats across the 5 boroughs as it has been more than half a
+year since it was instated.</p>
+<p>As such, this project is motivated by the need to evaluate public
+policy effectiveness, particularly in urban wildlife management. By
+comparing rat sighting data from different time periods and across
+various NYC neighborhoods, we aim to determine whether the change in
+trash disposal times has had a significant impact on the rat population.
+This analysis will not only contribute to public health knowledge but
+also offer insights for future urban management and rat mitigation
+strategies.</p>
 <p>Last but certainly not least, the viral nature of New York City
 Sanitation Commissioner Jessica Tisch’s declaration, “The rats don’t run
 this city, we do,” during the announcement of new rules for garbage
@@ -328,18 +397,106 @@ control in New York City.</p>
 </div>
 <div id="related-work" class="section level2">
 <h2>Related work:</h2>
-<p>Anything that inspired you, such as a paper, a web site, or something
-we discussed in class.</p>
+<p>We were guided by some of the in class exercises we did with the NYC
+Open Data. The restaurant inspection data and the exercises we did with
+that data helped us throughout some of the initial data importing and
+cleaning.</p>
 </div>
 <div id="initial-questions" class="section level2">
 <h2>Initial questions:</h2>
-<p>What questions are you trying to answer? How did these questions
-evolve over the course of the project? What new questions did you
-consider in the course of your analysis?</p>
+<p>The main question we wanted to answer was- What effect did the new
+trash time rule have on the rat sightings? Some things we were also
+interest in and that we though of as the project progressed was- How do
+rat sightings differ across boroughs? How do rat sightings vary across
+the time period we selected of pre, during and post pandemic
+(2019-2023)? How do rat sightings vary across geographical areas that
+have different waste tonnage? We could not perfectly answer some of
+these questions because of the many confounders of rat sightings but we
+hoped to gain some insight into what contributes to differences and
+reductions in rat sightings.</p>
 </div>
 <div id="data" class="section level2">
 <h2>Data:</h2>
-<p>Source, scraping method, cleaning, etc.</p>
+</div>
+<div id="cleaning-rat-sightings-dataset" class="section level2">
+<h2>Cleaning rat sightings dataset</h2>
+<p>The data was accessed and imported from two sources. * <a
+href="https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe">311
+Rat Sightings Data from NYC Open Data</a> * <a
+href="https://data.cityofnewyork.us/City-Government/DSNY-Monthly-Tonnage-Data/ebb7-mvp5">Monthly
+tonnage data for trash from Dept of Sanitation, NYC Open Data</a></p>
+<p>An important data set of rat sightings was created. Given the large
+number of observations and our interest in only looking at more recent
+data we restricted the time period to the years 2019-2023.</p>
+<pre class="r"><code>rat_sightings = 
+  read_csv (&quot;./data/Rat_Sightings.csv&quot;) |&gt;
+  janitor::clean_names(case = &quot;snake&quot;) |&gt;
+  separate(created_date, sep=&quot;/&quot;, into = c(&quot;month&quot;, &quot;day&quot;, &quot;year&quot;)) |&gt; 
+  separate(year, sep=&quot; &quot;, into = c(&quot;year&quot;)) |&gt;
+  filter(borough != &quot;STATEN ISLAND&quot;) |&gt; 
+  filter(year %in% c(&quot;2019&quot;, &quot;2020&quot;, &quot;2021&quot;, &quot;2022&quot;, &quot;2023&quot;)) |&gt;
+  mutate(
+    borough_id = recode(
+      borough, 
+      &quot;MANHATTAN&quot; = 1,
+      &quot;BRONX&quot; =2,
+      &quot;BROOKLYN&quot;=3,
+      &quot;QUEENS&quot;= 4)) |&gt;
+  mutate(
+    month = as.numeric(month),
+    year = as.numeric(year)
+  ) |&gt;
+  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id) |&gt;
+  mutate(
+    borough = str_to_sentence(borough)
+  )</code></pre>
+<p>The monthly waste tonnage data was filtered to have observations from
+2022 and 2023 so that the effect of the trash pickup timings in early
+2023 is evident. In addition, a new variable <code>total_organics</code>
+was created as the sum of residential organic waste and school organic
+waste. The dataset was then grouped by <code>borough</code>,
+<code>month</code>, <code>year</code> and <code>borough_id</code> such
+that each row of the dataset had <code>total_organics</code> and
+<code>total_refuse</code> for each month and each borough in 2022 and
+2023.</p>
+<div id="data-cleaning-for-waste-tonnage-data" class="section level3">
+<h3>Data Cleaning for Waste Tonnage data</h3>
+<pre class="r"><code>waste_tonnage = read_csv(&quot;./data/DSNY_Monthly_Tonnage_Data_20231202.csv&quot;) %&gt;%
+  clean_names(case = &quot;snake&quot;) %&gt;%
+  mutate(date_split = strsplit(month, &quot;/&quot;)) %&gt;%
+  mutate(
+    year = as.integer(sapply(date_split, function(x) x[1])),
+    month = as.integer(sapply(date_split, function(x) x[2]))
+  ) %&gt;%
+  filter(year %in% c(2022, 2023)) %&gt;% 
+  mutate(total_organics = resorganicstons + schoolorganictons)</code></pre>
+<pre><code>## Rows: 23296 Columns: 11
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr (3): MONTH, BOROUGH, COMMUNITYDISTRICT
+## dbl (8): REFUSETONSCOLLECTED, PAPERTONSCOLLECTED, MGPTONSCOLLECTED, RESORGAN...
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<pre class="r"><code>waste_tonnage = waste_tonnage %&gt;% 
+  group_by(borough, month, year, borough_id) %&gt;% 
+  summarise(
+    total_organics = sum(total_organics, na.rm = TRUE),
+    total_refuse = sum(refusetonscollected, na.rm = TRUE)
+    )</code></pre>
+<pre><code>## `summarise()` has grouped output by &#39;borough&#39;, &#39;month&#39;, &#39;year&#39;. You can
+## override using the `.groups` argument.</code></pre>
+</div>
+<div id="merging-rat-sightings-and-waste-tonnage-data"
+class="section level3">
+<h3>Merging rat sightings and waste tonnage data</h3>
+<pre class="r"><code>rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c(&quot;borough_id&quot;, &quot;month&quot;, &quot;year&quot;, &quot;borough&quot;))</code></pre>
+<p>Left joined the rat sightings data and monthly trash tonnage data by
+borough_id, month, year and borough. This is so that each rat sighting
+and its corresponding trash tonnage data were aggregated at the county,
+month and year level. Then we removed any entries with NAs for
+visualizations.</p>
+</div>
 </div>
 <div id="exploratory-analysis" class="section level2">
 <h2>Exploratory analysis:</h2>

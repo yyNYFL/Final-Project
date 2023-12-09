@@ -4,12 +4,56 @@ output:
   html_document:
     code_folding: show
 ---
- 
+```{r packages, message = FALSE}
+library(tidyverse)
+library(janitor)
+library(knitr)
+library(tidyr)
+library(readxl)
+library(lubridate)
+library(readr)
+library(stringr)
+library(ggplot2)
+library(tsibble)
+library(dbplyr)
+library(stats)
+library(plotly)
+library(ggridges)
+library(forecast)
+library(patchwork)
+library(dplyr)
+library(flexdashboard)
+library(leaflet)
+library(shiny)
+
+library(leaflet.providers)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 8, 
+  fig.height = 7,
+  out.width = "90%"
+)
+
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
 ## Motivation
 
-The primary goal of this project is to conduct a thorough analysis of rat sightings in New York City, focusing on the periods before and after the implementation of new trash pickup times, which shifted from after 4 pm to after 8 pm as of April 1, 2023. This change is part of Mayor Eric Adams' rat mitigation strategies, and our study aims to assess its effectiveness. The motivation behind this research is rooted in the significant public health concerns associated with increased rat sightings, especially post-COVID-19. Rats are known vectors for various diseases and can contaminate human food sources, posing a considerable health risk.
+The primary goal of this project is to conduct a thorough analysis of rat sightings in New York City, focusing on the periods before and after the implementation of new trash pickup times, which shifted from after 4 pm to after 8 pm as of April 1, 2023. This change is part of Mayor Eric Adams' rat mitigation strategies, and our study aims to assess its effectiveness. 
 
-This project is also motivated by the need to evaluate public policy effectiveness, particularly in urban wildlife management. By comparing rat sighting data from different time periods and across various NYC neighborhoods, we aim to determine whether the change in trash disposal times has had a significant impact on the rat population. This analysis will not only contribute to public health knowledge but also offer insights for future urban management and rat mitigation strategies.
+The motivation behind this research is rooted in the significant public health concerns associated with increased rat sightings, especially post-COVID-19. Rats are known vectors for various diseases and can contaminate human food sources, posing a considerable health risk. We like many New Yorkers see rats as a major problem given the health risks they pose. This problem has only worsened following the pandemic. New York City government agrees and has implemented and promoted a flashy new initiative they are calling "Send Rats Packing." https://www.nyc.gov/assets/queenscb2/downloads/pdf/notices/2023/SetoutTimes-Residential-Flyer-2023-02.pdf This initiative is mainly composed of a new rule involving trash that aims to reduce the time that trash, recycling, and curbside composting will sit on the sidewalk. The new rule went into effect on April 1, 2023 and left Residential buildings and their managers with two options -Place waste out after 6:00 PM in a container of 55 gallons or less with a secure lid or Place waste out after 8:00 PM, if putting bags directly on the curb. Although everyone wants to see rats gone not everyone is on board with this new rule and many are skeptical if it is actually going to result in less rats. The NYC Building Supers an organization composed of building maintenance workers like porters and supers across the 5 boroughs has called this rule "outrageous and unfair" as it requires them to work 14 hour days just to comply with the new rule. They have banded together to strike this rule by engaging in city hall protests and acts of civil disobedience by not complying with the new trash time. https://nycbuildingsupers.com/ Given this backdrop and the general skepticism surrounding the effectiveness of the measure we were motivated to explore whether or not this trash time is reduced the presence of rats across the 5 boroughs as it has been more than half a year since it was instated.
+
+As such, this project is  motivated by the need to evaluate public policy effectiveness, particularly in urban wildlife management. By comparing rat sighting data from different time periods and across various NYC neighborhoods, we aim to determine whether the change in trash disposal times has had a significant impact on the rat population. This analysis will not only contribute to public health knowledge but also offer insights for future urban management and rat mitigation strategies.
 
 Last but certainly not least, the viral nature of New York City Sanitation Commissioner Jessica Tisch's declaration, "The rats don't run this city, we do," during the announcement of new rules for garbage disposal back in October 2022, significantly contributes to the motivation behind our project. This statement, which quickly became a social media sensation and inspired a wide array of TikTok videos and even merchandise, has heightened our interest in the issue of rat control in New York City.
 
@@ -19,13 +63,78 @@ knitr::include_graphics("rats_gonna_hate_this.png")
 ```
 
 ## Related work:
-Anything that inspired you, such as a paper, a web site, or something we discussed in class.
+We were guided by some of the in class exercises we did with the NYC Open Data. The restaurant inspection data and the exercises we did with that data helped us throughout some of the initial data importing and cleaning. 
 
-## Initial questions: 
-What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?
+## Initial questions:
+The main question we wanted to answer was- 
+What effect did the new trash time rule have on the rat sightings? 
+Some things we were also interest in and that we though of as the project progressed was-
+How do rat sightings differ across boroughs?
+How do rat sightings vary across the time period we selected of pre, during and post pandemic (2019-2023)?
+How do rat sightings vary across geographical areas that have different waste tonnage?
+We could not perfectly answer some of these questions because of the many confounders of rat sightings but we hoped to gain some insight into what contributes to differences and reductions in rat sightings.
 
 ## Data:
-Source, scraping method, cleaning, etc.
+## Cleaning rat sightings dataset
+The data was accessed and imported from two sources. 
+* [311 Rat Sightings Data from NYC Open Data](https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe)
+* [Monthly tonnage data for trash from Dept of Sanitation, NYC Open Data](https://data.cityofnewyork.us/City-Government/DSNY-Monthly-Tonnage-Data/ebb7-mvp5)
+
+An important data set of rat sightings was created. Given the large number of observations and our interest in only looking at more recent data we restricted the time period to the years 2019-2023.
+```{r import and clean obs, message = FALSE, warning=FALSE}
+
+rat_sightings = 
+  read_csv ("./data/Rat_Sightings.csv") |>
+  janitor::clean_names(case = "snake") |>
+  separate(created_date, sep="/", into = c("month", "day", "year")) |> 
+  separate(year, sep=" ", into = c("year")) |>
+  filter(borough != "STATEN ISLAND") |> 
+  filter(year %in% c("2019", "2020", "2021", "2022", "2023")) |>
+  mutate(
+    borough_id = recode(
+      borough, 
+      "MANHATTAN" = 1,
+      "BRONX" =2,
+      "BROOKLYN"=3,
+      "QUEENS"= 4)) |>
+  mutate(
+    month = as.numeric(month),
+    year = as.numeric(year)
+  ) |>
+  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id) |>
+  mutate(
+    borough = str_to_sentence(borough)
+  )
+```
+
+The monthly waste tonnage data was filtered to have observations from 2022 and 2023 so that the effect of the trash pickup timings in early 2023 is evident. In addition, a new variable `total_organics` was created  as the sum of residential organic waste and school organic waste. The dataset was then grouped by `borough`, `month`, `year` and `borough_id` such that each row of the dataset had `total_organics` and `total_refuse` for each month and each borough in 2022 and 2023.
+
+### Data Cleaning for Waste Tonnage data
+```{r}
+waste_tonnage = read_csv("./data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
+  clean_names(case = "snake") %>%
+  mutate(date_split = strsplit(month, "/")) %>%
+  mutate(
+    year = as.integer(sapply(date_split, function(x) x[1])),
+    month = as.integer(sapply(date_split, function(x) x[2]))
+  ) %>%
+  filter(year %in% c(2022, 2023)) %>% 
+  mutate(total_organics = resorganicstons + schoolorganictons)
+
+waste_tonnage = waste_tonnage %>% 
+  group_by(borough, month, year, borough_id) %>% 
+  summarise(
+    total_organics = sum(total_organics, na.rm = TRUE),
+    total_refuse = sum(refusetonscollected, na.rm = TRUE)
+    )
+```
+
+### Merging rat sightings and waste tonnage data
+```{r}
+rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
+```
+
+Left joined the rat sightings data and monthly trash tonnage data by borough_id, month, year and borough. This is so that each rat sighting and its corresponding trash tonnage data were aggregated at the county, month and year level. Then we removed any entries with NAs for visualizations.
 
 ## Exploratory analysis:
 Visualizations, summaries, and exploratory statistical analyses. Justify the steps you took, and show any major changes to your ideas.
