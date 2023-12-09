@@ -19,6 +19,7 @@ library(dbplyr)
 library(stats)
 library(plotly)
 library(ggridges)
+library(forecast)
 library(patchwork)
 library(dplyr)
 library(flexdashboard)
@@ -50,7 +51,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 The primary goal of this project is to conduct a thorough analysis of rat sightings in New York City, focusing on the periods before and after the implementation of new trash pickup times, which shifted from after 4 pm to after 8 pm as of April 1, 2023. This change is part of Mayor Eric Adams' rat mitigation strategies, and our study aims to assess its effectiveness. 
 
-The motivation behind this research is rooted in the significant public health concerns associated with increased rat sightings, especially post-COVID-19. Rats are known vectors for various diseases and can contaminate human food sources, posing a considerable health risk. We like many New Yorkers see rats as a major problem given the health risks they pose. This problem has only worsened following the pandemic. New York City government agrees and has implemented and promoted a flashy new initiative they are calling "Send Rats Packing." https://www.nyc.gov/assets/queenscb2/downloads/pdf/notices/2023/SetoutTimes-Residential-Flyer-2023-02.pdf This initiative is mainly composed of a new rule involving trash that aims to reduce the time that trash, recycling, and curbside composting will sit on the sidewalk. The new rule went into effect on April 1, 2023 and left Residential buildings and their managers with two options -Place waste out after 6:00 PM in a container of 55 gallons or less with a secure lid or Place waste out after 8:00 PM, if putting bags directly on the curb. Although everyone wants to see rats gone not everyone is on board with this new rule and many are skeptical if it is actually going to result in less rats. The NYC Building Supers an organization composed of building maintenance workers like porters and supers across the 5 boroughs has called this rule "outrageous and unfair" as it requires them to work 14 hour days just to comply with the new rule. They have banded together to strike this rule by engaging in city hall protests and acts of civil disobedience by not complying with the new trash time. https://nycbuildingsupers.com/ Given this backdrop and the general skepticism surrounding the effectiveness of the measure we were motivated to explore whether or not this trash time is reduced the presence of rats across the 5 boroughs as it has been more than half a year since it was instated.
+The motivation behind this research is rooted in the significant public health concerns associated with increased rat sightings, especially post-COVID-19. Rats are known vectors for various diseases and can contaminate human food sources, posing a considerable health risk. We like many New Yorkers see rats as a major problem given the health risks they pose. This problem has only worsened following the pandemic. New York City government agrees and has implemented and promoted a flashy new initiative they are calling "Send Rats Packing." https://www.nyc.gov/assets/queenscb2/downloads/pdf/notices/2023/SetoutTimes-Residential-Flyer-2023-02.pdf This initiative is mainly composed of a new rule involving trash that aims to reduce the time that trash, recycling, and curbside composting will sit on the sidewalk. The new rule went into effect on April 1, 2023 and left Residential buildings and their managers with two options -Place waste out after 6:00 PM in a container of 55 gallons or less with a secure lid or Place waste out after 8:00 PM, if putting bags directly on the curb. Although everyone wants to see rats gone not everyone is on board with this new rule and many are skeptical if it is actually going to result in less rats. The NYC Building Supers an organization composed of building maintenance workers like porters and supers across the 5 boroughs has called this rule "outrageous and unfair" as it requires them to work 14 hour days just to comply with the new rule. They have banded together to strike this rule by engaging in city hall protests and acts of civil disobedience by not complying with the new trash time. https://nycbuildingsupers.com/ Given this backdrop and the general skepticism surrounding the effectiveness of the measure we were motivated to explore whether or not this trash time reduced the presence of rats across the 5 boroughs as it has been more than half a year since it was instated.
 
 As such, this project is  motivated by the need to evaluate public policy effectiveness, particularly in urban wildlife management. By comparing rat sighting data from different time periods and across various NYC neighborhoods, we aim to determine whether the change in trash disposal times has had a significant impact on the rat population. This analysis will not only contribute to public health knowledge but also offer insights for future urban management and rat mitigation strategies.
 
@@ -62,7 +63,8 @@ knitr::include_graphics("rats_gonna_hate_this.png")
 ```
 
 ## Related work
-We were guided by some of the in-class exercises we did with the NYC Open Data. The restaurant inspection and NYC Airbnb datasets and the exercises we did with those data helped us throughout some of the initial data importing and cleaning, as well as visualizations.
+We were guided by some of the in-class exercises we did with the NYC Open Data. The restaurant inspection and NYC Airbnb datasets and the exercises we did with those data helped us throughout some of the initial data importing and cleaning, as well as visualizations. We were also inspired by some of the deliverables other organizations have put out. Despite Mayor Eric Adams strongly advocating (https://www.nyc.gov/office-of-the-mayor/news/539-23/mayor-adams-notches-early-victories-war-rats-first-anti-rat-day-action) that the change in trash pickup times would address New York City’s rat problem, articles such as 
+this (https://ny1.com/nyc/all-boroughs/news/2023/03/31/will-setting-trash-bags-out-later-really-disrupt-the-rats--no--experts-say-),state that the effort will have no effect. We wanted to do a through analysis of the rat sightings and trash waste data to be be able to test the effectiveness of the intervention.
 
 ## Questions of interest
 The main question we wanted to answer was:  **What effect did the new trash time rule have on the rat sightings?**
@@ -155,7 +157,6 @@ rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(to
 We used the `left_join` function from the `dplyr` package to merge the rat sightings data with the waste tonnage data. We chose to merge based on `borough_id`, `month`, `year`, and `borough`. This approach ensures that each rat sighting record is aligned with the corresponding waste tonnage data based on both geographical (borough) and temporal (month and year) factors. After merging, we applied a filtering step to remove rows with missing values in the `total_organics` and `total_refuse` columns. 
 
 ## Exploratory analysis
-Visualizations, summaries, and exploratory statistical analyses. Justify the steps you took, and show any major changes to your ideas.
 
 ### Figure 1: Trash Tonnage by Borough, 2022 - 2023
 ```{r figure 1, message = FALSE}
@@ -236,8 +237,213 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
 
 **Figure 4.** This multi-line chart tracks the volume of trash, both organics and refuse, collected over time across different boroughs of New York City from early 2022 to the end of 2023. In this visualization, Brooklyn is depicted with a prominent peak, suggesting a significant increase in trash tonnage in summer months, potentially indicative of seasonal variations or specific events impacting waste production. The other boroughs also show variability, with Queens and Manhattan following similar trajectories and the Bronx displaying the least amount of trash tonnage overall. 
 
-## Additional analysis: 
-If you undertake formal statistical analyses, describe these in detail
+### Switching Focus to Rat Sightings
+We were very curious to see how the rat sightings differed across the time period we selected and across boroughs. These sightings are obviously not a measure of actual rat population given that they are based on 311 calls people make but this data is the closest thing we have to a proxy of actual rat populations. Given that, I think a lot of us were biased towards thinking Manhattan would have the most rat sightings and thus by proxy the largest population of rats just based on the density of buildings, people and restaurants. However, following the analysis of trash tonnage it is less suprising that Brooklyn actually leads in rat sightings. 
+
+```{r}
+summary(rat_sightings)
+variable_types <- sapply(rat_sightings, class)
+print(variable_types)
+# variables are not classified well for analysis so will need to convert numeric variables
+numeric_vars_to_convert <- c("unique_key", "month", "year", "incident_zip", "borough_id")
+
+rat_sightings <- rat_sightings %>% 
+  mutate(across(all_of(numeric_vars_to_convert), as.factor))
+        
+variable_types <- sapply(rat_sightings, class)
+print(variable_types)
+
+# number of rat sightings by boro each year
+rats_boro = rat_sightings %>% 
+  janitor::clean_names() %>% 
+  select(borough, year, unique_key) %>% 
+  group_by(borough, year) %>% 
+  count() %>% 
+  summarize(avg_rat_sightings = mean(n)) %>% 
+  ungroup %>% 
+  spread(key = year, value = avg_rat_sightings) %>% 
+  filter(borough != 'Unspecified')# I want to remove the unsepcified
+knitr::kable(rats_boro)
+```
+
+### Formatting the data in a way that makes plotting easier
+```{r}
+
+rat_sightings_agg = rat_sightings |> 
+  group_by(year, borough, month) |> 
+  filter(borough != "Unspecified") %>% 
+  summarise(count = n())
+```
+
+We can see from the kable output that there was quite a substantial jump in rat sightings from 2020 to 2021 in all of the boroughs. This may be another COVID phenomena as restaurants shifted to more outdoor dining which deposited more food waste and other things that attract rats onto the streets during the pandemic and after the pandemic when indoor dining became less feasible. https://apnews.com/article/rats-new-york-9dc65afa66a3535cba01b1ea866973a1#. Interestingly, Brooklyn seems to have the highest average of rat sightings amongst the 5 Boros for every year and on the opposite end Queens seems to have the lowest rat sightings pre pandemic but then this year Bronx was the boro with the least rat sightings.
+
+
+### Figure 5: Rat Sightings Over Time by Borough and Year
+```{r}
+rat_sightings_agg <- rat_sightings_agg %>%
+  mutate(common_date = paste0(year, "-", month),
+         common_date = lubridate::ym(common_date))
+
+# Plot rat sightings over time
+rats_yr_plot <- rat_sightings_agg %>%
+  ggplot(aes(x = common_date, y = count, group = year, color = year)) +
+  geom_point(alpha = .3) +
+  geom_smooth(se = FALSE) +
+  facet_wrap(~ borough, scales = "free_y", ncol = 2) +  # Facet wrap by borough
+  labs(
+    title = "Rat Sightings Over Time",
+       x = "Date",
+       y = "Rat Sightings Count") +
+  theme(text = element_text(size = 15), 
+        axis.text.x = element_text(angle = 60, hjust = 1, size = 10)) +
+  scale_colour_discrete("Year") +
+  scale_x_date(date_breaks = "3 month", labels = function(x) format(x, "%b")) +
+  scale_color_viridis_d(end = .8)
+ggplotly(rats_yr_plot)
+```
+**Figure 5.** This plot illustrates the seasonal nature of the rat sightings. we can see an approxsumately normal curve of rat sightings across all boros and years. Across all of the years which are distinguished by the colors the peak of each curve occurs around the spring months of May, June, and July which may have something to do with more people being out and about during those months to encounter the rats. Interestingly, the Bronx experienced its highest number of sightings in 2021 whereas the other three boroughs experienced theirs in 2022.
+### Figure 6: Rat Sightings 
+```{r}
+ bar_plot <- ggplot(rat_sightings_agg, aes(x = year, y = count)) +
+  geom_bar(stat = "identity", position = "dodge", fill = "skyblue") +
+  facet_wrap(~borough, scales = "free_y") +
+  theme(
+    legend.position = "bottom",
+    axis.text.y = element_text(color = "black", size = 10, hjust = 1),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10)
+  ) +
+  labs(
+    x = "Year",
+    y = "Count of Rat Sightings",
+    title = "Rat Sightings Across Time and Borough",
+  ) +
+  viridis::scale_colour_viridis()
+
+ggplotly(bar_plot)
+```
+**Figure 6.** This bar graph gives a more concrete visual of what was discussed earlier where we can see that although the Bronx generally has less sightings than some of the other boros it experienced an uptick in sightings before the three other boros. 
+
+### Figure 7: Time series of rat sightings
+Given the seasonal nature of the rat sightings we saw plotted in the prior plot we wanted to explore how a time series plot would better visualize the data
+```{r}
+rat_sightings_tibble <- rat_sightings_agg %>%
+  mutate(common_date = paste0(year, "-", month),
+         common_date = lubridate::ym(common_date)) %>%
+  as_tibble(index = common_date, key = borough) %>%
+  select(borough, common_date, count)  # Include common_date in the select statement
+
+# Time series plot
+rats_time_series_plot <- rat_sightings_tibble %>%
+  ggplot(aes(x = common_date, y = count, color = borough, group = borough)) +
+  geom_line() +
+  labs(title = "Rat Sightings Time Series",
+       x = "Date",
+       y = "Rat Sightings Count",
+       color = "Borough") +
+  theme_minimal()
+
+# Print the plot
+ggplotly(rats_time_series_plot)
+```
+
+**Figure 7.** This figure further cements the seasonal nature of the rat sightings and does a better job at depicting on the same scale how much the rat sightings jumped following the pandemic. We can also see from this plot that the trash time rule that occured on 04/01/2023 did not make a noticeable impact on the rat sightings and we are assuming by proxy on the rat population.
+
+### Figure 7: Exploring the forecasting of rat sightings in Brooklyn and the impact of the April 1st Trash Time Change
+Brooklyn has the highest average of rat sightings so a time series decomposition plot with forcasting may shed some light into how the rat sightings would have looked if the trash time rule was not implemented. 
+```{r}
+borough_data <- rat_sightings_tibble %>%
+  filter(borough == "Brooklyn")  
+
+# Convert data to a univariate time series
+ts_data <- ts(borough_data$count, frequency = 12)  
+# Time series analysis using STL decomposition
+ts_analysis <- stlf(ts_data, h = 12)  
+
+# Plot time series decomposition
+autoplot(ts_analysis) +
+  labs(title = "Time Series Decomposition",
+       y = "Rat Sightings Count",
+       color = "Components") +
+  theme_minimal()
+
+rat_sightings_tibble2 <- rat_sightings_agg %>%
+  mutate(common_date = paste0(year, "-", month, "-01"),
+         common_date = lubridate::ymd(common_date),
+         rule_impact = ifelse(common_date >= "2023-04-01", "After", "Before")) %>%
+  as_tibble(index = common_date, key = c(borough, rule_impact)) %>%
+  select(borough, common_date, count, rule_impact)
+
+rats_rule_impact_plot <- rat_sightings_tibble2 %>%
+  ggplot(aes(x = common_date, y = count, color = rule_impact, group = interaction(borough, rule_impact))) +
+  geom_line() +
+  labs(title = "Impact of Rat Extermination Rule",
+       x = "Date",
+       y = "Rat Sightings Count",
+       color = "Rule Impact",
+       subtitle = "Comparison Before and After April 2013") +
+  theme(text = element_text(size = 15), 
+        axis.text.x = element_text(angle = 60, hjust = 1, size = 10)) +
+  scale_colour_discrete("Year") +
+  scale_x_date(date_breaks = "3 month", labels = function(x) format(x, "%b")) +
+  scale_color_viridis_d(end = .8)
+
+print(rats_rule_impact_plot)
+```
+
+# Statistical Analysis
+
+### ANOVA.
+Analysis of variance of the average rat sightings we saw in the 'rat_boro' kable output. We can see that there are differences in the average rat sightings across years and boros so we wanted to explore if thiese diferences were statistically significant through a ANOVA test. 
+```{r}
+rat_sightings_agg = rat_sightings |> 
+  group_by(year, borough, month) |> 
+  filter(borough != "Unspecified") %>% 
+  summarise(count = n())
+
+anova_result = aov(count ~ factor(year) * factor(borough), data = rat_sightings_agg) 
+broom::tidy(anova_result)
+
+anova_result_no_interaction = aov(count ~ factor(year) + factor(borough), data = rat_sightings_agg) 
+broom::tidy(anova_result_no_interaction)
+```
+
+We want to check the assumptions for the ANOVA models ran above. There are three assumptions that should be met when computing an ANOVA:
+
+-The response variable must be quantitative- This is met since the response variable of count of rat sightings is quantitative. -The variance between the groups of average rat sightings by borough and by year should be similar and in this case they are. -Observations should be independent of one another- which we are assuming is satisfied. -The distribution of values within each group of rat sightings by borough is normally distributed which we can see in some of the plots. We can also check the normality of residuals in the below code. From the Normal Q-Q plot of both model residuals the points are quite close to the fitted diagonal line. We also conducted Shapiro-Wilk tests for normality of residuals for both models and with a null hypothesis that the residuals follow a normal distribution and an alternative hypothesis that the residuals does not follow a normal distribution. The p-value for the no interaction model is 0.2694 and the p-value for the interaction model is 0.03883. At a 5% level of significance we can conclude the residuals of the interaction model follow a normal distribution but the residuals for the no interaction model do not follow a normal distribution. 
+###Checking assumptions of ANOVA
+```{r}
+# Extract residuals for the interaction model
+residuals_interaction <- residuals(anova_result)
+
+# Check normality of residuals for the interaction model
+qqnorm(anova_result$residuals)
+qqline(anova_result$residuals)
+
+# Shapiro-Wilk test for normality
+shapiro.test(anova_result$residuals)
+
+# Extract residuals for the interaction model
+residuals_no_interaction <- residuals(anova_result_no_interaction)
+
+# Check normality of residuals for the model without interaction
+qqnorm(residuals_no_interaction)
+qqline(residuals_no_interaction)
+
+# Shapiro-Wilk test for normality
+shapiro.test(anova_result_no_interaction$residuals)
+
+# Shapiro-Wilk test for normality
+shapiro.test(residuals_no_interaction)
+
+# Check homoscedasticity for the interaction model
+plot(anova_result$model)
+
+# Check homoscedasticity for the model without interaction
+plot(anova_result_no_interaction$model)
+```
+
+From the ANOVA test for the model with the interaction which is the model that checked all of the assumptions of an ANOVA test above we can see from the p-value of being <0.001 we can reject the null hypotheses and conclude that at least one of the average rat sightings by borough and by year are statistically different.
+
 
 ## Discussion: 
 What were your findings? Are they what you expect? What insights into the data can you make?
