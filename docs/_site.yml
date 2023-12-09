@@ -16,4 +16,5 @@ navbar:
     - icon: fa-github fa-lg
       href: https://github.com/yyNYFL/Final-Project
 output:
-  html_document
+  html_document:
+    theme: simplex #can change to other default themes from website
