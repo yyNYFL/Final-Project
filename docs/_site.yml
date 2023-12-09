@@ -3,15 +3,18 @@ output_dir: "."
 navbar:
   title: "Introduction"
   right:
-    - text: "Final Report"
-      href: final_report.html
     - text: "Exploratory Data Analysis"
       href: eda.html
-    - text: "Data Visualization"
-      href: data_vizualization.html
+    - text: "Statistical Data Analysis"
+      href: sda.html
+    - text: "Final Report"
+      href: final_report.html
+    - text: "About us"
+      href: about.html
     - icon: fa-envelope fa-lg
-      href: mailto:<you@youremail.com>
+      href: mailto:<lvr2115@cumc.columbia.edu>
     - icon: fa-github fa-lg
       href: https://github.com/yyNYFL/Final-Project
 output:
-  html_document
+  html_document:
+    theme: simplex #can change to other default themes from website

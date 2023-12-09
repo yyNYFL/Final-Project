@@ -1,0 +1,53 @@
+---
+title: "Statistical Data Analysis"
+output: 
+  html_document:
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(readr)
+library(janitor)
+library(dplyr)
+library(ggplot2)
+library(stats)
+library(stats)
+library(tidyr)
+library(readxl)
+library(stringr)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Data Cleaning for Waste Tonnage data (N)
+```{r data cleaning, include=FALSE}
+waste_tonnage = read_csv("./DSNY_Monthly_Tonnage_Data_20231202.csv") |>
+  clean_names(case = "snake") |>
+  mutate(date_split = strsplit(month, "/")) |>
+  mutate(
+    year = as.integer(sapply(date_split, function(x) x[1])),
+    month = as.integer(sapply(date_split, function(x) x[2]))
+  ) |>
+  filter(year %in% c(2022, 2023)) |>
+  mutate(total_organics = resorganicstons + schoolorganictons)
+
+waste_tonnage = waste_tonnage |>
+  group_by(borough, month, year, borough_id) |> 
+  summarise(
+    total_organics = sum(total_organics, na.rm = TRUE),
+    total_refuse = sum(refusetonscollected, na.rm = TRUE)
+    )
+```
+
+### ANOVA to assess the differences in waste tonnage across borough
+```{r}
+
+anova_result_organics = aov(total_organics ~ borough, data = waste_tonnage) |> broom::tidy()
+
+anova_result_refuse = aov(total_refuse ~ borough, data = waste_tonnage) |> broom::tidy()
+
+```
+
+The one-way ANOVA test was performed to assess the differences in organic waste tonnage among the boroughs. The ANOVA test revealed statistically significant differences in organic waste tonnage among the boroughs (F(4, 112) = 10.5, p < 0.05). 
+
+A one-way ANOVA test was conducted to examine the differences in refuse waste tonnage among the boroughs.The ANOVA test revealed statistically significant differences in refuse waste tonnage among the boroughs (F(4, 112) = 82.1, p < 0.001).

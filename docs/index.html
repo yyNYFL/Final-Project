@@ -16,7 +16,7 @@
 <script src="site_libs/header-attrs-2.24/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/simplex.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
@@ -324,16 +324,25 @@ div.tocify {
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="about.html">About</a>
+  <a href="eda.html">Exploratory Data Analysis</a>
 </li>
 <li>
-  <a href="mailto:&lt;you@youremail.com&gt;">
+  <a href="sda.html">Statistical Data Analysis</a>
+</li>
+<li>
+  <a href="final_report.html">Final Report</a>
+</li>
+<li>
+  <a href="about.html">About the team</a>
+</li>
+<li>
+  <a href="mailto:&lt;lvr2115@cumc.columbia.edu&gt;">
     <span class="fa fa-envelope fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="http://github.com/&lt;YOUR_GH_NAME&gt;/">
+  <a href="https://github.com/yyNYFL/Final-Project">
     <span class="fa fa-github fa-lg"></span>
      
   </a>
@@ -355,14 +364,10 @@ Rat Sightings in NYC</h1>
 
 <div align="center">
 <div class="line-block"></div>
-<div align="center">
-<div class="line-block"></div>
-<div align="center">
-<div class="line-block"></div>
-<p><img src="rats.png" width="30%" style="display: block; margin: auto;" /></p>
+<p><img src="run%20this%20city.jpg" width="30%" style="display: block; margin: auto;" /></p>
 <div align="left">
-<div id="introduction" class="section level2">
-<h2>Introduction</h2>
+<div id="introduction" class="section level3">
+<h3>Introduction</h3>
 <p>Rats have become an emblematic reality of New York City. In recent
 years following the COVID-19 pandemic, concerns over increased rat
 sightings in NYC have drawn national attention. Previous mayoral
@@ -376,21 +381,28 @@ change from the previous rule that allowed trash to be set out after
 <p>The growing number of rat sightings are a public health issue. Rats
 are vectors for many diseases and they can contaminate human food with
 pathogens as they gnaw on packaging to access food, drop feces, and
-leave behind other bodily fluids. Our motivation for this project is to
-explore rat sighting data in different parts of NYC and assess whether
-mitigation efforts have had any significant impact on the rat
-population.</p>
+leave behind other bodily fluids. Our main motivation for this project
+is to explore rat sighting data in different parts of NYC and assess
+whether mitigation efforts have had any significant impact on the rat
+population. Finally, we hope to answer the question: <em>do rats run
+this city?</em></p>
 </div>
-<div id="team" class="section level2">
-<h2>Team</h2>
-<p>Collaborators and rat friends for this project:</p>
-<ul>
-<li>Brianna</li>
-<li>Jessie</li>
-<li>Laura</li>
-<li>Navya</li>
-<li>Youssra</li>
-</ul>
+<div id="data-sources" class="section level3">
+<h3>Data sources</h3>
+<p>Data regarding rat sightings, including date, location, borough, and
+more, are from <a
+href="https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe">NYC
+Open Data’s 311 Rat Sightings</a>.</p>
+<p>This dataset contains all NYC 311 Service Requests from 2010 to
+present and is updated daily. It was downloaded and imported with
+observations as of December 2, 2023.</p>
+<p>Data regarding trash and waste are from the <a
+href="https://data.cityofnewyork.us/City-Government/DSNY-Monthly-Tonnage-Data/ebb7-mvp5">NYC
+Open Data’s Monthly tonnage data for Department of Sanitation</a>.</p>
+<p>DSNY Monthly Tonnage Data provides monthly collection tonnages that
+the Department of Sanitation collects from NYC residences and
+institutions. It was downloaded and imported with observations as of
+December 2, 2023.</p>
 </div>
 
 

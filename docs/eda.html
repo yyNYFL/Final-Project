@@ -11,12 +11,12 @@
 
 
 
-<title>EDA</title>
+<title>Exploratory Data Analysis</title>
 
 <script src="site_libs/header-attrs-2.24/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/simplex.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
@@ -30,6 +30,7 @@
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
@@ -218,6 +219,9 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -248,22 +252,25 @@ $(document).ready(function () {
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="final_report.html">Final Report</a>
-</li>
-<li>
   <a href="eda.html">Exploratory Data Analysis</a>
 </li>
 <li>
-  <a href="data_vizualization.html">Data Visualization</a>
+  <a href="sda.html">Statistical Data Analysis</a>
 </li>
 <li>
-  <a href="mailto:&lt;you@youremail.com&gt;">
+  <a href="final_report.html">Final Report</a>
+</li>
+<li>
+  <a href="about.html">About us</a>
+</li>
+<li>
+  <a href="mailto:&lt;lvr2115@cumc.columbia.edu&gt;">
     <span class="fa fa-envelope fa-lg"></span>
      
   </a>
 </li>
 <li>
-  <a href="http://github.com/&lt;YOUR_GH_NAME&gt;/">
+  <a href="https://github.com/yyNYFL/Final-Project">
     <span class="fa fa-github fa-lg"></span>
      
   </a>
@@ -275,16 +282,206 @@ $(document).ready(function () {
 
 <div id="header">
 
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
 
 
-<h1 class="title toc-ignore">EDA</h1>
+
+<h1 class="title toc-ignore">Exploratory Data Analysis</h1>
 
 </div>
 
 
-<div id="exploratory-data-analysis" class="section level3">
-<h3>Exploratory Data Analysis</h3>
-<p>all our statistical analysis can go here</p>
+<pre class="r"><code>rat_sightings = 
+  read_csv (&quot;./data/Rat_Sightings.csv&quot;) |&gt;
+  janitor::clean_names(case = &quot;snake&quot;) |&gt;
+  separate(created_date, sep=&quot;/&quot;, into = c(&quot;month&quot;, &quot;day&quot;, &quot;year&quot;)) |&gt; 
+  separate(year, sep=&quot; &quot;, into = c(&quot;year&quot;)) |&gt;
+  filter(borough != &quot;STATEN ISLAND&quot;) |&gt; 
+  filter(year %in% c(&quot;2019&quot;, &quot;2020&quot;, &quot;2021&quot;, &quot;2022&quot;, &quot;2023&quot;)) |&gt;
+  mutate(
+    borough_id = recode(
+      borough, 
+      &quot;MANHATTAN&quot; = 1,
+      &quot;BRONX&quot; =2,
+      &quot;BROOKLYN&quot;=3,
+      &quot;QUEENS&quot;= 4)) |&gt;
+  mutate(
+    month = as.numeric(month),
+    year = as.numeric(year)
+  ) |&gt;
+  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id) |&gt;
+  mutate(
+    borough = str_to_sentence(borough)
+  )</code></pre>
+<div id="data-cleaning-and-tidying" class="section level3">
+<h3>Data cleaning and tidying</h3>
+<p>In order to analyze rat sightings, we used 2 data sources from NYC
+Open Data: 311 Rat Sightings and Monthly tonnage data from the NYC
+Department of Sanitation. The 311 Rat Sightings data was filtered to
+exclude observations from Staten Island since there was significantly
+less data from that borough. This decision aims to maintain consistency
+and reliability in our analysis by focusing on areas with more robust
+data. Since the data set contained data from more than 230,000 rat
+sighting reports from 2010 until present-day, we filtered it to only
+include data from 2019-2023. Only variables of interest to our analysis
+were kept:</p>
+<ul>
+<li><code>unique_key</code>: A unique identifier for each rat sighting
+report.</li>
+<li><code>location_type</code>: The type of location where the rat
+sighting was reported, providing context to the environment of these
+sightings.</li>
+<li><code>incident_zip</code>: The ZIP code of the reported sighting,
+allowing for geographical analysis.</li>
+<li><code>borough</code>: The borough where the sighting occurred,
+crucial for comparing sightings across different areas of the city.</li>
+<li><code>location</code>: Specific coordinates of the sighting,
+offering detailed geographical information in regards to latitude and
+longitude.</li>
+</ul>
+<p>Variable <code>created_date</code> was separated to create three new
+variables to allow for analysis: <code>month</code>, <code>day</code>,
+<code>year</code>.</p>
+<p><code>Borough_id</code> : still need to describe why it was
+created</p>
+<pre class="r"><code>waste_tonnage = read_csv(&quot;data/DSNY_Monthly_Tonnage_Data_20231202.csv&quot;) %&gt;%
+  clean_names(case = &quot;snake&quot;) %&gt;%
+  mutate(date_split = strsplit(month, &quot;/&quot;)) %&gt;%
+  mutate(
+    year = as.integer(sapply(date_split, function(x) x[1])),
+    month = as.integer(sapply(date_split, function(x) x[2]))
+  ) %&gt;%
+  filter(year %in% c(2022, 2023)) %&gt;% 
+  mutate(total_organics = resorganicstons + schoolorganictons)
+
+waste_tonnage = waste_tonnage %&gt;% 
+  group_by(borough, month, year, borough_id) %&gt;% 
+  summarise(
+    total_organics = sum(total_organics, na.rm = TRUE),
+    total_refuse = sum(refusetonscollected, na.rm = TRUE)
+    )</code></pre>
+</div>
+<div id="waste-tonnage-data-cleaning" class="section level3">
+<h3>Waste Tonnage Data Cleaning</h3>
+<p>add desc here</p>
+<p>Merging Datasets: We used the left_join function from the dplyr
+package to merge the rat_sightings data with the waste_tonnage data. We
+chose to merge based on borough_id, month, year, and borough. This
+approach ensures that each rat sighting record is aligned with the
+corresponding waste tonnage data based on both geographical (borough)
+and temporal (month and year) factors. After merging, we applied a
+filtering step to remove rows with missing values in the total_organics
+and total_refuse columns.</p>
+</div>
+<div id="figure-1-total-trash-by-borough-for-2022-and-2023"
+class="section level3">
+<h3>Figure 1: Total Trash by Borough for 2022 and 2023</h3>
+<pre class="r"><code>waste_tonnage_by_borough = rat_waste_filtered |&gt; 
+  group_by(borough) |&gt; 
+  summarise(total_tonnage = sum(total_organics + total_refuse))
+
+ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = total_tonnage)) +
+  geom_bar(stat = &quot;identity&quot;, fill = &quot;blue&quot;) +
+  labs(x = &quot;Borough&quot;, y = &quot;Trash Tonnage&quot;, title = &quot;Trash Tonnage by Borough, 2022 - 2023&quot;) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
+<p><img src="eda_files/figure-html/figure%201-1.png" width="672" /></p>
+<p>Figure 1, “Trash Tonnage by Borough, 2022 - 2023,” is a bar chart
+visualizing the total amount of trash (comprising both organics and
+refuse) collected in each borough of New York City over the years 2022
+and 2023. From the chart, it is evident that <em>Brooklyn</em> has the
+highest total trash tonnage, shown by the tallest bar. The other
+boroughs—Queens, Manhattan, and the Bronx—are represented with
+progressively smaller bars, indicating a decrease in the total trash
+tonnage respectively. Staten Island is not included in the chart, which
+is consistent with the earlier note that data from Staten Island was
+excluded from the analysis due to significantly less data being
+available from that borough. The scientific notation on the y-axis was
+used for a concise representation of large numbers, indicating the vast
+scale of waste collected in across the boroughs.</p>
+</div>
+<div id="figure-2-total-refuse-and-total-organics"
+class="section level3">
+<h3>Figure 2: Total Refuse and Total organics</h3>
+<pre class="r"><code>waste_by_borough_refuse &lt;- waste_tonnage %&gt;%
+  filter(borough != &quot;Staten Island&quot;) %&gt;%
+  aggregate(total_refuse ~ borough, data=., sum)
+
+plot_refuse = ggplot(waste_by_borough_refuse, aes(x = reorder(borough, -total_refuse), y = total_refuse)) +
+  geom_bar(stat = &quot;identity&quot;, fill = &quot;blue4&quot;) +
+  labs(x = &quot;Borough&quot;, y = &quot;Total Refuse (tons)&quot;, 
+       title = &quot;Total Refuse Production by Borough&quot;) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+waste_by_borough_organics &lt;- waste_tonnage %&gt;%
+  filter(borough != &quot;Staten Island&quot;) %&gt;%
+  aggregate(total_organics ~ borough, data=., sum)
+
+plot_organics = ggplot(waste_by_borough_organics, aes(x = reorder(borough, -total_organics), y = total_organics)) +
+  geom_bar(stat = &quot;identity&quot;, fill = &quot;green4&quot;) +
+  labs(x = &quot;Borough&quot;, y = &quot;Total Organics (tons)&quot;, 
+       title = &quot;Total Organics Production by Borough&quot;) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+plot_refuse </code></pre>
+<p><img src="eda_files/figure-html/figure%202-1.png" width="672" /></p>
+<pre class="r"><code>plot_organics </code></pre>
+<p><img src="eda_files/figure-html/figure%202-2.png" width="672" /></p>
+<p>Refuse and Organic waste was separate on to two plots since they have
+different scales for trash collection.</p>
+<p>“Total Refuse Production by Borough (Excluding Staten Island),”
+indicates that Brooklyn leads in refuse production, with Queens closely
+following, indicative of their larger populations and potentially more
+commercial activity. The Bronx and Manhattan, while still contributing
+significantly, show lower quantities of refuse. Notably, the volume of
+refuse is substantially higher than organics, suggesting that
+non-recyclable and non-compostable waste constitutes a larger proportion
+of the city’s waste output.</p>
+<p>“Total Organics Production by Borough (Excluding Staten Island),”
+portrays a similar bar chart but focuses on organic waste. The trends
+here are slightly different; Queens surpasses Brooklyn in organic waste,
+which might reflect more effective organic waste collection policies or
+higher community engagement in composting programs. Manhattan and the
+Bronx have much lower figures for organic waste, which might be due to
+differences in residential patterns, availability of green spaces, or
+varying levels of participation in organic waste recycling programs.</p>
+<p>Comparing the two figures, it’s clear that the refuse and organics
+are managed differently across boroughs, with refuse being the dominant
+waste type.</p>
+</div>
+<div id="figure-3-trash-by-borough-per-month" class="section level2">
+<h2>Figure 3: Trash by Borough per month</h2>
+<pre class="r"><code>total_tonnage_by_borough_year_month = rat_waste_filtered |&gt; 
+  group_by(borough, year, month) |&gt; 
+  summarise(total_tonnage = sum(total_organics + total_refuse))
+
+total_tonnage_by_borough_year_month$year_month &lt;- as.Date(paste(total_tonnage_by_borough_year_month$year, total_tonnage_by_borough_year_month$month, &quot;01&quot;, sep = &quot;-&quot;))
+
+ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnage, group = borough, color = borough)) +
+  geom_line() +
+  labs(x = &quot;Year-Month&quot;, y = &quot;Amount of Trash (in tons)&quot;, title = &quot;Trash Tonnage by Month and Borough&quot;, color = &quot;Borough&quot;) +
+  scale_x_date(date_labels = &quot;%Y-%m&quot;, date_breaks = &quot;1 month&quot;) +
+  scale_y_continuous(labels = scales::number_format(scale = 1e-6)) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
+<p><img src="eda_files/figure-html/figure%203-1.png" width="672" /></p>
+<p>Figure 3, “Trash Tonnage by Month and Borough” is a multi-line chart
+that tracks the volume of trash, both organics and refuse, collected
+over time across different boroughs of New York City, from early 2022 to
+the end of 2023. In this visualization, Brooklyn is depicted with a
+prominent peak, suggesting a significant increase in trash tonnage in
+summer months, potentially indicative of seasonal variations or specific
+events impacting waste production. The other boroughs also show
+variability, with Queens and Manhattan following similar trajectories
+and the Bronx displaying the least amount of trash tonnage overall.</p>
 </div>
 
 
@@ -320,6 +517,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
