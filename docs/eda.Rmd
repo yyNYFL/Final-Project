@@ -79,13 +79,9 @@ waste_tonnage = waste_tonnage %>%
 
 ```{r merging, include=FALSE}
 rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
+rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(total_refuse)) #filtering out NAs in the dataset. brianna did this before she did her figures. 
 ```
 - Describe how we merged here
-
-## filtering out the N/A's in a dataset (B)
-```{r}
-rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(total_refuse))
-```
 
 ### Figure 1: Total Trash by Borough for 2022 and 2023
 ```{r figure 1, message = FALSE}
@@ -99,6 +95,8 @@ ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = t
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+
+- Explain this figure
 
 ### Figure 2: Total Refuse and Total organics 
 ```{r figure 2, message = FALSE}

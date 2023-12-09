@@ -360,9 +360,6 @@ waste_tonnage = waste_tonnage %&gt;%
 <li><p>Describe how we merged here</p></li>
 </ul>
 </div>
-<div id="filtering-out-the-nas-in-a-dataset-b" class="section level2">
-<h2>filtering out the N/A’s in a dataset (B)</h2>
-<pre class="r"><code>rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) &amp; !is.na(total_refuse))</code></pre>
 <div id="figure-1-total-trash-by-borough-for-2022-and-2023"
 class="section level3">
 <h3>Figure 1: Total Trash by Borough for 2022 and 2023</h3>
@@ -376,6 +373,9 @@ ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = t
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
 <p><img src="eda_files/figure-html/figure%201-1.png" width="672" /></p>
+<ul>
+<li>Explain this figure</li>
+</ul>
 </div>
 <div id="figure-2-total-refuse-and-total-organics"
 class="section level3">
@@ -406,7 +406,6 @@ barplot(waste_by_borough_organics$total_organics,
 <li>Explain this figure, including why you had to separate (b/c they are
 on a different scale)</li>
 </ul>
-</div>
 </div>
 <div id="figure-3-trash-by-borough-per-month" class="section level2">
 <h2>Figure 3: Trash by Borough per month</h2>
