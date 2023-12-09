@@ -15,12 +15,77 @@ library(stats)
 ```
 
 
-## filtering out the N/A's in a dataset
+```{r packages, message = FALSE}
+library(tidyverse)
+library(tidyr)
+library(readxl)
+library(stringr)
+library(dbplyr)
+setwd("/Users/lvrt/Documents/Data Science I/Final Project - Laura")
+```
+
+## Cleaning rat sightings dataset
+
+```{r import and clean obs, message = FALSE, warning=FALSE}
+setwd("/Users/lvrt/Documents/Data Science I/Final Project - Laura")
+
+rat_sightings = 
+  read_csv ("./data/Rat_Sightings.csv") |>
+  janitor::clean_names(case = "snake") |>
+  separate(created_date, sep="/", into = c("month", "day", "year")) |> 
+  separate(year, sep=" ", into = c("year")) |>
+  filter(borough != "STATEN ISLAND") |> 
+  filter(year %in% c("2019", "2020", "2021", "2022", "2023")) |>
+  mutate(
+    borough_id = recode(
+      borough, 
+      "MANHATTAN" = 1,
+      "BRONX" =2,
+      "BROOKLYN"=3,
+      "QUEENS"= 4)) |>
+  mutate(
+    month = as.numeric(month),
+    year = as.numeric(year)
+  ) |>
+  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id) |>
+  mutate(
+    borough = str_to_sentence(borough)
+  )
+```
+
+
+### Data Cleaning for Waste Tonnage data (N)
+```{r}
+waste_tonnage = read_csv("./DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
+  clean_names(case = "snake") %>%
+  mutate(date_split = strsplit(month, "/")) %>%
+  mutate(
+    year = as.integer(sapply(date_split, function(x) x[1])),
+    month = as.integer(sapply(date_split, function(x) x[2]))
+  ) %>%
+  filter(year %in% c(2022, 2023)) %>% 
+  mutate(total_organics = resorganicstons + schoolorganictons)
+
+waste_tonnage = waste_tonnage %>% 
+  group_by(borough, month, year, borough_id) %>% 
+  summarise(
+    total_organics = sum(total_organics, na.rm = TRUE),
+    total_refuse = sum(refusetonscollected, na.rm = TRUE)
+    )
+```
+
+
+### Merging rat sightings and waste tonnage data (N)
+```{r}
+rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
+```
+
+## filtering out the N/A's in a dataset (B)
 ```{r}
 rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(total_refuse))
 ```
 
-## plot 1: total trash by borough for 2022 and 2023
+## plot 1: total trash by borough for 2022 and 2023 (B)
 ```{r}
 waste_tonnage_by_borough = rat_waste_filtered |> 
   group_by(borough) |> 
@@ -33,7 +98,7 @@ ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = t
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-## bar graph by total refuse and total organics (had to separate b/c they are on a different scale)
+## bar graph by total refuse and total organics (had to separate b/c they are on a different scale) (B)
 ```{r}
 waste_by_borough_refuse <- aggregate(total_refuse ~ borough, data=waste_tonnage, sum)
 
@@ -60,7 +125,7 @@ barplot(waste_by_borough_organics$total_organics,
 ```
 
 
-## plot 2: trash by borough & month
+## plot 2: trash by borough & month (B)
 ```{r}
 total_tonnage_by_borough_year_month = rat_waste_filtered |> 
   group_by(borough, year, month) |> 

@@ -33,6 +33,3 @@ Data regarding rat sightings, including date, location, borough, and more, are f
 
 Data regarding trash and waste are from [NYC Open Data's Monthly tonnage data for Department of Sanitation](https://data.cityofnewyork.us/City-Government/DSNY-Monthly-Tonnage-Data/ebb7-mvp5). 
 
-
-
-
