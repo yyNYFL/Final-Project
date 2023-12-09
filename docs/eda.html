@@ -11,7 +11,7 @@
 
 
 
-<title>Exploratory Data Analysis</title>
+<title> “Exploratory Data Analysis”</title>
 
 <script src="site_libs/header-attrs-2.24/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -264,6 +264,9 @@ $(document).ready(function () {
   <a href="about.html">About us</a>
 </li>
 <li>
+  <a href="rat_mapping2.html">Maps</a>
+</li>
+<li>
   <a href="mailto:&lt;lvr2115@cumc.columbia.edu&gt;">
     <span class="fa fa-envelope fa-lg"></span>
      
@@ -292,7 +295,8 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Exploratory Data Analysis</h1>
+<h1 class="title toc-ignore"><div align="center"><br />
+“Exploratory Data Analysis”</h1>
 
 </div>
 
@@ -319,18 +323,21 @@ $(document).ready(function () {
   mutate(
     borough = str_to_sentence(borough)
   )</code></pre>
-<div id="data-cleaning-and-tidying" class="section level3">
-<h3>Data cleaning and tidying</h3>
-<p>In order to analyze rat sightings, we used 2 data sources from NYC
-Open Data: 311 Rat Sightings and Monthly tonnage data from the NYC
-Department of Sanitation. The 311 Rat Sightings data was filtered to
-exclude observations from Staten Island since there was significantly
-less data from that borough. This decision aims to maintain consistency
-and reliability in our analysis by focusing on areas with more robust
-data. Since the data set contained data from more than 230,000 rat
-sighting reports from 2010 until present-day, we filtered it to only
-include data from 2019-2023. Only variables of interest to our analysis
-were kept:</p>
+<div id="data-cleaning-and-tidying" class="section level2">
+<h2>Data cleaning and tidying</h2>
+<p>In order to analyze <strong>the rat sightings</strong> dataset, we
+used 2 data sources from NYC Open Data: 311 Rat Sightings and Monthly
+tonnage data from the NYC Department of Sanitation. The 311 Rat
+Sightings data was filtered to exclude observations from Staten Island
+since there was significantly less data from that borough. This decision
+aims to maintain consistency and reliability in our analysis by focusing
+on areas with more robust data. Since the data set contained data from
+more than 230,000 rat sighting reports from 2010 until present-day, we
+filtered it to only include data from 2019-2023. Variable
+<code>created_date</code> was separated to create three new variables to
+allow for analysis: <code>month</code>, <code>day</code>,
+<code>year</code>. These new variables and variables of interest to our
+analysis were kept:</p>
 <ul>
 <li><code>unique_key</code>: A unique identifier for each rat sighting
 report.</li>
@@ -344,12 +351,11 @@ crucial for comparing sightings across different areas of the city.</li>
 <li><code>location</code>: Specific coordinates of the sighting,
 offering detailed geographical information in regards to latitude and
 longitude.</li>
+<li><code>borough_id</code>: This variable was created based on
+<code>borough</code> and assigns a numeric value to each of the 4
+boroughs represented in our dataset. This was done to facilitate the
+dataset merging later on.</li>
 </ul>
-<p>Variable <code>created_date</code> was separated to create three new
-variables to allow for analysis: <code>month</code>, <code>day</code>,
-<code>year</code>.</p>
-<p><code>Borough_id</code> : still need to describe why it was
-created</p>
 <pre class="r"><code>waste_tonnage = read_csv(&quot;data/DSNY_Monthly_Tonnage_Data_20231202.csv&quot;) %&gt;%
   clean_names(case = &quot;snake&quot;) %&gt;%
   mutate(date_split = strsplit(month, &quot;/&quot;)) %&gt;%
@@ -366,49 +372,56 @@ waste_tonnage = waste_tonnage %&gt;%
     total_organics = sum(total_organics, na.rm = TRUE),
     total_refuse = sum(refusetonscollected, na.rm = TRUE)
     )</code></pre>
-</div>
-<div id="waste-tonnage-data-cleaning" class="section level3">
-<h3>Waste Tonnage Data Cleaning</h3>
-<p>add desc here</p>
-<p>Merging Datasets: We used the left_join function from the dplyr
-package to merge the rat_sightings data with the waste_tonnage data. We
-chose to merge based on borough_id, month, year, and borough. This
+<p>The <strong>monthly waste tonnage</strong> dataset was filtered to
+have observations from 2022 and 2023 so that the effect of the trash
+pickup timings in early 2023 is evident. In addition, a new variable
+<code>total_organics</code> was created as the sum of residential
+organic waste and school organic waste. The dataset was then grouped by
+<code>borough</code>, <code>month</code>, <code>year</code> and
+<code>borough_id</code> such that each row of the dataset had
+<code>total_organics</code> and <code>total_refuse</code> for each month
+and each borough in 2022 and 2023. Only variables of interest to our
+analysis were kept: * * *</p>
+<p>We used the <code>left_join</code> function from the
+<code>dplyr</code> package to merge the rat sightings data with the
+waste tonnage data. We chose to merge based on <code>borough_id</code>,
+<code>month</code>, <code>year</code>, and <code>borough</code>. This
 approach ensures that each rat sighting record is aligned with the
 corresponding waste tonnage data based on both geographical (borough)
 and temporal (month and year) factors. After merging, we applied a
-filtering step to remove rows with missing values in the total_organics
-and total_refuse columns.</p>
+filtering step to remove rows with missing values in the
+<code>total_organics</code> and <code>total_refuse</code> columns.</p>
 </div>
-<div id="figure-1-total-trash-by-borough-for-2022-and-2023"
+<div id="visualizations" class="section level2">
+<h2>Visualizations</h2>
+<div id="figure-1-trash-tonnage-by-borough-2022---2023"
 class="section level3">
-<h3>Figure 1: Total Trash by Borough for 2022 and 2023</h3>
+<h3>Figure 1: Trash Tonnage by Borough, 2022 - 2023</h3>
 <pre class="r"><code>waste_tonnage_by_borough = rat_waste_filtered |&gt; 
   group_by(borough) |&gt; 
   summarise(total_tonnage = sum(total_organics + total_refuse))
 
 ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = total_tonnage)) +
-  geom_bar(stat = &quot;identity&quot;, fill = &quot;blue&quot;) +
+  geom_bar(stat = &quot;identity&quot;, fill = &quot;red3&quot;) +
   labs(x = &quot;Borough&quot;, y = &quot;Trash Tonnage&quot;, title = &quot;Trash Tonnage by Borough, 2022 - 2023&quot;) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
 <p><img src="eda_files/figure-html/figure%201-1.png" width="672" /></p>
-<p>Figure 1, “Trash Tonnage by Borough, 2022 - 2023,” is a bar chart
-visualizing the total amount of trash (comprising both organics and
-refuse) collected in each borough of New York City over the years 2022
-and 2023. From the chart, it is evident that <em>Brooklyn</em> has the
-highest total trash tonnage, shown by the tallest bar. The other
-boroughs—Queens, Manhattan, and the Bronx—are represented with
-progressively smaller bars, indicating a decrease in the total trash
-tonnage respectively. Staten Island is not included in the chart, which
-is consistent with the earlier note that data from Staten Island was
-excluded from the analysis due to significantly less data being
-available from that borough. The scientific notation on the y-axis was
-used for a concise representation of large numbers, indicating the vast
-scale of waste collected in across the boroughs.</p>
+<p><strong>Figure 1.</strong> This bar chart shows the total amount of
+trash (comprising both organics and refuse) collected in each borough of
+New York City in 2022 and 2023. From the chart, it is evident that
+<em>Brooklyn</em> has the highest total trash tonnage, shown by the
+tallest bar. The other boroughs—Queens, Manhattan, and the Bronx—are
+represented with progressively smaller bars, indicating a decrease in
+the total trash tonnage respectively. Staten Island is not included in
+the chart, as observations from that borough were excluded. The
+scientific notation on the y-axis was used for a concise representation
+of large numbers, indicating the vast scale of waste collected in across
+the boroughs.</p>
 </div>
-<div id="figure-2-total-refuse-and-total-organics"
+<div id="figure-2-total-refuse-production-by-boroughs"
 class="section level3">
-<h3>Figure 2: Total Refuse and Total organics</h3>
+<h3>Figure 2: Total Refuse Production by Boroughs</h3>
 <pre class="r"><code>waste_by_borough_refuse &lt;- waste_tonnage %&gt;%
   filter(borough != &quot;Staten Island&quot;) %&gt;%
   aggregate(total_refuse ~ borough, data=., sum)
@@ -420,7 +433,22 @@ plot_refuse = ggplot(waste_by_borough_refuse, aes(x = reorder(borough, -total_re
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-waste_by_borough_organics &lt;- waste_tonnage %&gt;%
+plot_refuse </code></pre>
+<p><img src="eda_files/figure-html/plot%20refuse-1.png" width="672" /></p>
+<p><strong>Figure 2.</strong> This plot shows that Brooklyn leads in
+refuse production, with Queens closely following, indicative of their
+larger populations and potentially more commercial activity. The Bronx
+and Manhattan, while still contributing significantly, show lower
+quantities of refuse. Notably, the volume of refuse is substantially
+higher than organics, suggesting that non-recyclable and non-compostable
+waste constitutes a larger proportion of the city’s waste output.</p>
+</div>
+<div id="figure-3-total-organics-production-by-boroughs"
+class="section level3">
+<h3>Figure 3: Total Organics Production by Boroughs</h3>
+<p>*Refuse and Organic waste are separate on two plots since they have
+different scales for trash collection.</p>
+<pre class="r"><code>waste_by_borough_organics &lt;- waste_tonnage %&gt;%
   filter(borough != &quot;Staten Island&quot;) %&gt;%
   aggregate(total_organics ~ borough, data=., sum)
 
@@ -431,34 +459,23 @@ plot_organics = ggplot(waste_by_borough_organics, aes(x = reorder(borough, -tota
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-plot_refuse </code></pre>
-<p><img src="eda_files/figure-html/figure%202-1.png" width="672" /></p>
-<pre class="r"><code>plot_organics </code></pre>
-<p><img src="eda_files/figure-html/figure%202-2.png" width="672" /></p>
-<p>Refuse and Organic waste was separate on to two plots since they have
-different scales for trash collection.</p>
-<p>“Total Refuse Production by Borough (Excluding Staten Island),”
-indicates that Brooklyn leads in refuse production, with Queens closely
-following, indicative of their larger populations and potentially more
-commercial activity. The Bronx and Manhattan, while still contributing
-significantly, show lower quantities of refuse. Notably, the volume of
-refuse is substantially higher than organics, suggesting that
-non-recyclable and non-compostable waste constitutes a larger proportion
-of the city’s waste output.</p>
-<p>“Total Organics Production by Borough (Excluding Staten Island),”
-portrays a similar bar chart but focuses on organic waste. The trends
-here are slightly different; Queens surpasses Brooklyn in organic waste,
-which might reflect more effective organic waste collection policies or
-higher community engagement in composting programs. Manhattan and the
-Bronx have much lower figures for organic waste, which might be due to
-differences in residential patterns, availability of green spaces, or
-varying levels of participation in organic waste recycling programs.</p>
-<p>Comparing the two figures, it’s clear that the refuse and organics
+
+plot_organics </code></pre>
+<p><img src="eda_files/figure-html/plot%20organics-1.png" width="672" /></p>
+<p><strong>Figure 3.</strong> This figure portrays a similar bar chart
+but focuses on organic waste. The trends here are slightly different;
+Queens surpasses Brooklyn in organic waste, which might reflect more
+effective organic waste collection policies or higher community
+engagement in composting programs. Manhattan and the Bronx have much
+lower figures for organic waste, which might be due to differences in
+residential patterns, availability of green spaces, or varying levels of
+participation in organic waste recycling programs.</p>
+<p>Comparing the two figures, it is evident that the refuse and organics
 are managed differently across boroughs, with refuse being the dominant
 waste type.</p>
 </div>
-<div id="figure-3-trash-by-borough-per-month" class="section level2">
-<h2>Figure 3: Trash by Borough per month</h2>
+<div id="figure-4-trash-by-borough-per-month" class="section level3">
+<h3>Figure 4: Trash by Borough per month</h3>
 <pre class="r"><code>total_tonnage_by_borough_year_month = rat_waste_filtered |&gt; 
   group_by(borough, year, month) |&gt; 
   summarise(total_tonnage = sum(total_organics + total_refuse))
@@ -473,15 +490,16 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
 <p><img src="eda_files/figure-html/figure%203-1.png" width="672" /></p>
-<p>Figure 3, “Trash Tonnage by Month and Borough” is a multi-line chart
-that tracks the volume of trash, both organics and refuse, collected
-over time across different boroughs of New York City, from early 2022 to
-the end of 2023. In this visualization, Brooklyn is depicted with a
-prominent peak, suggesting a significant increase in trash tonnage in
-summer months, potentially indicative of seasonal variations or specific
-events impacting waste production. The other boroughs also show
-variability, with Queens and Manhattan following similar trajectories
-and the Bronx displaying the least amount of trash tonnage overall.</p>
+<p><strong>Figure 4.</strong> This multi-line chart tracks the volume of
+trash, both organics and refuse, collected over time across different
+boroughs of New York City from early 2022 to the end of 2023. In this
+visualization, Brooklyn is depicted with a prominent peak, suggesting a
+significant increase in trash tonnage in summer months, potentially
+indicative of seasonal variations or specific events impacting waste
+production. The other boroughs also show variability, with Queens and
+Manhattan following similar trajectories and the Bronx displaying the
+least amount of trash tonnage overall.</p>
+</div>
 </div>
 
 

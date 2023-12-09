@@ -1,0 +1,102 @@
+---
+title: "Rat Sightings Maps"
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+    social: menu
+    source: embed
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggridges)
+library(patchwork)
+library(dplyr)
+library(flexdashboard)
+library(leaflet)
+library(shiny)
+
+library(leaflet.providers)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 8, 
+  fig.height = 7,
+  out.width = "90%"
+)
+
+
+```
+
+
+```{r import and clean obs, message = FALSE, warning=FALSE, include=FALSE}
+
+rat_sightings = 
+  read_csv ("./data/Rat_Sightings.csv") |>
+  janitor::clean_names(case = "snake") |>
+  separate(created_date, sep="/", into = c("month", "day", "year")) |> 
+  separate(year, sep=" ", into = c("year")) |>
+  filter(borough != "STATEN ISLAND") |> 
+  filter(year %in% c("2019", "2020", "2021", "2022", "2023")) |>
+  mutate(
+    borough_id = recode(
+      borough, 
+      "MANHATTAN" = 1,
+      "BRONX" =2,
+      "BROOKLYN"=3,
+      "QUEENS"= 4)) |>
+  mutate(
+    month = as.numeric(month),
+    year = as.numeric(year)
+  ) |>
+  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id) |>
+  mutate(
+    borough = str_to_sentence(borough)
+  )
+```
+
+
+```{r mapping dataset, include=FALSE}
+map_rat_sightings<-rat_sightings %>% 
+  separate(location, into = c("latitude", "longitude"), sep = ",", remove = FALSE) %>%  
+mutate(
+    longitude = str_replace(longitude, "\\)", ""),
+    latitude = str_replace(latitude, "\\(", ""),
+    longitude = as.numeric(longitude),
+    latitude = as.numeric(latitude)) 
+```
+
+### NYC Rat Sightings, 2022
+
+```{r}
+pal <- colorFactor(
+  palette = "viridis",
+  domain = map_rat_sightings$borough)
+
+map2022<-map_rat_sightings %>% 
+  filter(year=="2022") %>% 
+  leaflet() %>% 
+  addProviderTiles(providers$CartoDB.Positron) %>% 
+  addCircleMarkers( lat = ~latitude,  
+        lng = ~longitude, radius = .1)
+
+map2022
+```
+
+### NYC Rat Sightings, 2023
+
+```{r}
+pal <- colorFactor(
+  palette = "viridis",
+  domain = map_rat_sightings$borough)
+
+map2023<-map_rat_sightings %>% 
+  filter(year=="2023") %>% 
+  leaflet() %>% 
+  addProviderTiles(providers$CartoDB.Positron) %>% 
+  addCircleMarkers( lat = ~latitude,  
+        lng = ~longitude, radius = .1)
+
+map2023
+```
