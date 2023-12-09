@@ -18,8 +18,7 @@ library(stringr)
 setwd("/Users/lvrt/Documents/Data Science I/Final Project - Laura")
 ```
 
-
-```{r import and clean rat sightings, message = FALSE, warning=FALSE, include=FALSE}
+```{r import and clean rat sightings, message = FALSE, warning=FALSE}
 setwd("/Users/lvrt/Documents/Data Science I/Final Project - Laura")
 
 rat_sightings = 
@@ -58,7 +57,7 @@ Variable `created_date` was separated to create three new variables to allow for
 
 - Still need to describe variables, why we created borough_id. 
 
-```{r data cleaning waste, include=FALSE}
+```{r data cleaning waste, message = FALSE}
 waste_tonnage = read_csv("./DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
   clean_names(case = "snake") %>%
   mutate(date_split = strsplit(month, "/")) %>%
@@ -84,12 +83,12 @@ rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", 
 - Describe how we merged here
 
 ## filtering out the N/A's in a dataset (B)
-```{r, include=FALSE}
+```{r}
 rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(total_refuse))
 ```
 
-## plot 1: total trash by borough for 2022 and 2023 (B)
-```{r}
+### Figure 1: Total Trash by Borough for 2022 and 2023
+```{r figure 1, message = FALSE}
 waste_tonnage_by_borough = rat_waste_filtered |> 
   group_by(borough) |> 
   summarise(total_tonnage = sum(total_organics + total_refuse))
@@ -101,8 +100,8 @@ ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = t
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-## bar graph by total refuse and total organics (had to separate b/c they are on a different scale) (B)
-```{r}
+### Figure 2: Total Refuse and Total organics 
+```{r figure 2, message = FALSE}
 waste_by_borough_refuse <- aggregate(total_refuse ~ borough, data=waste_tonnage, sum)
 
 # barplot for total refuse
@@ -126,9 +125,10 @@ barplot(waste_by_borough_organics$total_organics,
         las=2)
 ```
 
+- Explain this figure, including why you had to separate (b/c they are on a different scale)
 
-## plot 2: trash by borough & month (B)
-```{r}
+## Figure 3: Trash by Borough per month 
+```{r figure 3, message = FALSE}
 total_tonnage_by_borough_year_month = rat_waste_filtered |> 
   group_by(borough, year, month) |> 
   summarise(total_tonnage = sum(total_organics + total_refuse))
@@ -144,3 +144,5 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
+
+- Explain this figure,

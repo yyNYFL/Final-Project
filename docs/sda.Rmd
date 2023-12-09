@@ -1,5 +1,8 @@
 ---
 title: "Statistical Data Analysis"
+output: 
+  html_document:
+    code_folding: show
 ---
 
 ```{r setup, include=FALSE}
@@ -36,7 +39,7 @@ waste_tonnage = waste_tonnage |>
     )
 ```
 
-##  statistical analysis 1: statistical test (ANOVA) to assess the differences in waste tonnage among the boroughs.
+### ANOVA to assess the differences in waste tonnage across borough
 ```{r}
 
 anova_result_organics = aov(total_organics ~ borough, data = waste_tonnage) |> broom::tidy()

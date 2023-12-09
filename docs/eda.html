@@ -297,6 +297,30 @@ $(document).ready(function () {
 </div>
 
 
+<pre class="r"><code>setwd(&quot;/Users/lvrt/Documents/Data Science I/Final Project - Laura&quot;)
+
+rat_sightings = 
+  read_csv (&quot;./data/Rat_Sightings.csv&quot;) |&gt;
+  janitor::clean_names(case = &quot;snake&quot;) |&gt;
+  separate(created_date, sep=&quot;/&quot;, into = c(&quot;month&quot;, &quot;day&quot;, &quot;year&quot;)) |&gt; 
+  separate(year, sep=&quot; &quot;, into = c(&quot;year&quot;)) |&gt;
+  filter(borough != &quot;STATEN ISLAND&quot;) |&gt; 
+  filter(year %in% c(&quot;2019&quot;, &quot;2020&quot;, &quot;2021&quot;, &quot;2022&quot;, &quot;2023&quot;)) |&gt;
+  mutate(
+    borough_id = recode(
+      borough, 
+      &quot;MANHATTAN&quot; = 1,
+      &quot;BRONX&quot; =2,
+      &quot;BROOKLYN&quot;=3,
+      &quot;QUEENS&quot;= 4)) |&gt;
+  mutate(
+    month = as.numeric(month),
+    year = as.numeric(year)
+  ) |&gt;
+  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id) |&gt;
+  mutate(
+    borough = str_to_sentence(borough)
+  )</code></pre>
 <div id="data-cleaning-and-tidying" class="section level3">
 <h3>Data cleaning and tidying</h3>
 <p>In order to analyze rat sightings, we used 2 data sources from NYC
@@ -313,18 +337,35 @@ interest to our analysis were kept: - <code>unique_key</code> -
 variables to allow for analysis: <code>month</code>, <code>day</code>,
 <code>year</code>.</p>
 <ul>
-<li><p>Still need to describe variables, why we created
-borough_id.</p></li>
+<li>Still need to describe variables, why we created borough_id.</li>
+</ul>
+<pre class="r"><code>waste_tonnage = read_csv(&quot;./DSNY_Monthly_Tonnage_Data_20231202.csv&quot;) %&gt;%
+  clean_names(case = &quot;snake&quot;) %&gt;%
+  mutate(date_split = strsplit(month, &quot;/&quot;)) %&gt;%
+  mutate(
+    year = as.integer(sapply(date_split, function(x) x[1])),
+    month = as.integer(sapply(date_split, function(x) x[2]))
+  ) %&gt;%
+  filter(year %in% c(2022, 2023)) %&gt;% 
+  mutate(total_organics = resorganicstons + schoolorganictons)
+
+waste_tonnage = waste_tonnage %&gt;% 
+  group_by(borough, month, year, borough_id) %&gt;% 
+  summarise(
+    total_organics = sum(total_organics, na.rm = TRUE),
+    total_refuse = sum(refusetonscollected, na.rm = TRUE)
+    )</code></pre>
+<ul>
 <li><p>Describe waste data cleaning/tidying here</p></li>
 <li><p>Describe how we merged here</p></li>
 </ul>
 </div>
 <div id="filtering-out-the-nas-in-a-dataset-b" class="section level2">
 <h2>filtering out the N/A’s in a dataset (B)</h2>
-</div>
-<div id="plot-1-total-trash-by-borough-for-2022-and-2023-b"
-class="section level2">
-<h2>plot 1: total trash by borough for 2022 and 2023 (B)</h2>
+<pre class="r"><code>rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) &amp; !is.na(total_refuse))</code></pre>
+<div id="figure-1-total-trash-by-borough-for-2022-and-2023"
+class="section level3">
+<h3>Figure 1: Total Trash by Borough for 2022 and 2023</h3>
 <pre class="r"><code>waste_tonnage_by_borough = rat_waste_filtered |&gt; 
   group_by(borough) |&gt; 
   summarise(total_tonnage = sum(total_organics + total_refuse))
@@ -334,13 +375,11 @@ ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = t
   labs(x = &quot;Borough&quot;, y = &quot;Trash Tonnage&quot;, title = &quot;Trash Tonnage by Borough, 2022 - 2023&quot;) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
-<p><img src="eda_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p><img src="eda_files/figure-html/figure%201-1.png" width="672" /></p>
 </div>
-<div
-id="bar-graph-by-total-refuse-and-total-organics-had-to-separate-bc-they-are-on-a-different-scale-b"
-class="section level2">
-<h2>bar graph by total refuse and total organics (had to separate b/c
-they are on a different scale) (B)</h2>
+<div id="figure-2-total-refuse-and-total-organics"
+class="section level3">
+<h3>Figure 2: Total Refuse and Total organics</h3>
 <pre class="r"><code>waste_by_borough_refuse &lt;- aggregate(total_refuse ~ borough, data=waste_tonnage, sum)
 
 # barplot for total refuse
@@ -351,7 +390,7 @@ barplot(waste_by_borough_refuse$total_refuse,
         col=&quot;blue&quot;,
         names.arg=waste_by_borough_refuse$borough,
         las=2)</code></pre>
-<p><img src="eda_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p><img src="eda_files/figure-html/figure%202-1.png" width="672" /></p>
 <pre class="r"><code>waste_by_borough_organics &lt;- aggregate(total_organics ~ borough, data=waste_tonnage, sum)
 
 # barplot for total organics
@@ -362,16 +401,20 @@ barplot(waste_by_borough_organics$total_organics,
         col=&quot;green&quot;,
         names.arg=waste_by_borough_organics$borough,
         las=2)</code></pre>
-<p><img src="eda_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+<p><img src="eda_files/figure-html/figure%202-2.png" width="672" /></p>
+<ul>
+<li>Explain this figure, including why you had to separate (b/c they are
+on a different scale)</li>
+</ul>
 </div>
-<div id="plot-2-trash-by-borough-month-b" class="section level2">
-<h2>plot 2: trash by borough &amp; month (B)</h2>
+</div>
+<div id="figure-3-trash-by-borough-per-month" class="section level2">
+<h2>Figure 3: Trash by Borough per month</h2>
 <pre class="r"><code>total_tonnage_by_borough_year_month = rat_waste_filtered |&gt; 
   group_by(borough, year, month) |&gt; 
-  summarise(total_tonnage = sum(total_organics + total_refuse))</code></pre>
-<pre><code>## `summarise()` has grouped output by &#39;borough&#39;, &#39;year&#39;. You can override using
-## the `.groups` argument.</code></pre>
-<pre class="r"><code>total_tonnage_by_borough_year_month$year_month &lt;- as.Date(paste(total_tonnage_by_borough_year_month$year, total_tonnage_by_borough_year_month$month, &quot;01&quot;, sep = &quot;-&quot;))
+  summarise(total_tonnage = sum(total_organics + total_refuse))
+
+total_tonnage_by_borough_year_month$year_month &lt;- as.Date(paste(total_tonnage_by_borough_year_month$year, total_tonnage_by_borough_year_month$month, &quot;01&quot;, sep = &quot;-&quot;))
 
 ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnage, group = borough, color = borough)) +
   geom_line() +
@@ -380,7 +423,10 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
   scale_y_continuous(labels = scales::number_format(scale = 1e-6)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
-<p><img src="eda_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="eda_files/figure-html/figure%203-1.png" width="672" /></p>
+<ul>
+<li>Explain this figure,</li>
+</ul>
 </div>
 
 
