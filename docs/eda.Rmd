@@ -128,7 +128,6 @@ plot_organics = ggplot(waste_by_borough_organics, aes(x = reorder(borough, -tota
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-plot_refuse + plot_organics
 ```
 
 Refuse and Organic waste was separate on to two plots since they have different scales for trash collection.
@@ -149,12 +148,13 @@ total_tonnage_by_borough_year_month$year_month <- as.Date(paste(total_tonnage_by
 
 ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnage, group = borough, color = borough)) +
   geom_line() +
-  labs(x = "Year-Month", y = "Amount of Trash (in tons)", title = "Trash Tonnage by Month and Borough") +
+  labs(x = "Year-Month", y = "Amount of Trash (in tons)", title = "Trash Tonnage by Month and Borough", color = "Borough") +
   scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month") +
   scale_y_continuous(labels = scales::number_format(scale = 1e-6)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+
 ```
 
-- Explain this figure,
+Figure 3, "Trash Tonnage by Month and Borough" is a multi-line chart that tracks the volume of trash, both organics and refuse, collected over time across different boroughs of New York City, from early 2022 to the end of 2023. In this visualization, Brooklyn is depicted with a prominent peak, suggesting a significant increase in trash tonnage in summer months, potentially indicative of seasonal variations or specific events impacting waste production. The other boroughs also show variability, with Queens and Manhattan following similar trajectories and the Bronx displaying the least amount of trash tonnage overall. 
