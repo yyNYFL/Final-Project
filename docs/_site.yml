@@ -5,8 +5,8 @@ navbar:
   right:
     - text: "Exploratory Data Analysis"
       href: eda.html
-    - text: "Data Visualization"
-      href: data_vizualization.html
+    - text: "Statistical Data Analysis""
+       href: sda.html
     - text: "Final Report"
       href: final_report.html
     - text: "About the team"
