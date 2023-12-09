@@ -261,7 +261,7 @@ $(document).ready(function () {
   <a href="final_report.html">Final Report</a>
 </li>
 <li>
-  <a href="about.html">About the team</a>
+  <a href="about.html">About us</a>
 </li>
 <li>
   <a href="mailto:&lt;lvr2115@cumc.columbia.edu&gt;">
@@ -297,9 +297,7 @@ $(document).ready(function () {
 </div>
 
 
-<pre class="r"><code>setwd(&quot;/Users/lvrt/Documents/Data Science I/Final Project - Laura&quot;)
-
-rat_sightings = 
+<pre class="r"><code>rat_sightings = 
   read_csv (&quot;./data/Rat_Sightings.csv&quot;) |&gt;
   janitor::clean_names(case = &quot;snake&quot;) |&gt;
   separate(created_date, sep=&quot;/&quot;, into = c(&quot;month&quot;, &quot;day&quot;, &quot;year&quot;)) |&gt; 
@@ -327,19 +325,34 @@ rat_sightings =
 Open Data: 311 Rat Sightings and Monthly tonnage data from the NYC
 Department of Sanitation. The 311 Rat Sightings data was filtered to
 exclude observations from Staten Island since there was significantly
-less data from that borough. Since the data set contained data from more
-than 230,000 rat sighting reports from 2010 until present-day, we
-filtered it to only include data from 2019-2023. Only variables of
-interest to our analysis were kept: - <code>unique_key</code> -
-<code>location_type</code> - <code>incident_zip</code> -
-<code>borough</code> - <code>location</code></p>
+less data from that borough. This decision aims to maintain consistency
+and reliability in our analysis by focusing on areas with more robust
+data. Since the data set contained data from more than 230,000 rat
+sighting reports from 2010 until present-day, we filtered it to only
+include data from 2019-2023. Only variables of interest to our analysis
+were kept:</p>
+<ul>
+<li><code>unique_key</code>: A unique identifier for each rat sighting
+report.</li>
+<li><code>location_type</code>: The type of location where the rat
+sighting was reported, providing context to the environment of these
+sightings.</li>
+<li><code>incident_zip</code>: The ZIP code of the reported sighting,
+allowing for geographical analysis.</li>
+<li><code>borough</code>: The borough where the sighting occurred,
+crucial for comparing sightings across different areas of the city.</li>
+<li><code>location</code>: Specific coordinates of the sighting,
+offering detailed geographical information in regards to latitude and
+longitude.</li>
+</ul>
 <p>Variable <code>created_date</code> was separated to create three new
 variables to allow for analysis: <code>month</code>, <code>day</code>,
 <code>year</code>.</p>
-<ul>
-<li>Still need to describe variables, why we created borough_id.</li>
-</ul>
-<pre class="r"><code>waste_tonnage = read_csv(&quot;./DSNY_Monthly_Tonnage_Data_20231202.csv&quot;) %&gt;%
+<p>Borough_id was serves as a numerical identifier for each borough,
+which can be useful for data management, especially when dealing with
+categorical data (like the boroughs) in statistical analyses or
+visualizations.</p>
+<pre class="r"><code>waste_tonnage = read_csv(&quot;data/DSNY_Monthly_Tonnage_Data_20231202.csv&quot;) %&gt;%
   clean_names(case = &quot;snake&quot;) %&gt;%
   mutate(date_split = strsplit(month, &quot;/&quot;)) %&gt;%
   mutate(
@@ -355,11 +368,41 @@ waste_tonnage = waste_tonnage %&gt;%
     total_organics = sum(total_organics, na.rm = TRUE),
     total_refuse = sum(refusetonscollected, na.rm = TRUE)
     )</code></pre>
-<ul>
-<li><p>Describe waste data cleaning/tidying here</p></li>
-<li><p>Describe how we merged here</p></li>
-</ul>
 </div>
+<div id="waste-tonnage-data-cleaning" class="section level2">
+<h2>Waste Tonnage Data Cleaning</h2>
+<p>To tidy up the waste tonnage data, we started by importing the
+Monthly Tonnage Data from the NYC Department of Sanitation. To make the
+data more manageable and consistent, we first applied the clean_names
+function.</p>
+<p>Next, we focused on the date information. The month column initially
+contained combined year and month data, so we split it into two separate
+variables. We achieved this by using strsplit to separate the year and
+month, and then applied the sapply function to extract and convert these
+into individual year and month integer columns.</p>
+<p>We decided to filter the dataset to include only the years 2022 and
+2023. This filtering aligns our analysis with a more recent and relevant
+timeframe and allows for a smaller subset of the initial dataset.</p>
+<p>We then consolidated the data on organic waste, which was initially
+spread across different columns (resorganicstons and schoolorganictons).
+These represent residential organic tons and school organic tons. We
+summed these columns to create a new <code>total_organics</code> column,
+giving us a the total organic waste.</p>
+<p>For our last step, we grouped the data by borough, month, year, and
+borough_id. This grouping allowed us to summarize the total organic
+waste and total refuse collected in each borough for each month and
+year, ensuring our analysis would capture the geographical and temporal
+variations in waste tonnage. We used summarise with na.rm = TRUE to
+handle any missing values effectively, ensuring that they did not skew
+our results.</p>
+<p>Merging Datasets: We used the left_join function from the dplyr
+package to we merge the rat_sightings data with the waste_tonnage data.
+We chose to merge based on borough_id, month, year, and borough. This
+approach ensures that each rat sighting record is aligned with the
+corresponding waste tonnage data based on both geographical (borough)
+and temporal (month and year) factors. After merging, we applied a
+filtering step to remove rows with missing values (NA) in the
+total_organics and total_refuse columns.</p>
 <div id="figure-1-total-trash-by-borough-for-2022-and-2023"
 class="section level3">
 <h3>Figure 1: Total Trash by Borough for 2022 and 2023</h3>
@@ -373,9 +416,19 @@ ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = t
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
 <p><img src="eda_files/figure-html/figure%201-1.png" width="672" /></p>
-<ul>
-<li>Explain this figure</li>
-</ul>
+<p>Figure 1, titled “Trash Tonnage by Borough, 2022 - 2023,” is a bar
+chart visualizing the total amount of trash (comprising both organics
+and refuse) collected in each borough of New York City over the years
+2022 and 2023. From the chart, it is evident that <em>Brooklyn</em> has
+the highest total trash tonnage, shown by the tallest bar. The other
+boroughs—Queens, Manhattan, and the Bronx—are represented with
+progressively smaller bars, indicating a decrease in the total trash
+tonnage respectively. Staten Island is not included in the chart, which
+is consistent with the earlier note that data from Staten Island was
+excluded from the analysis due to significantly less data being
+available from that borough. The scientific notation on the y-axis was
+used for a concise representation of large numbers, indicating the vast
+scale of waste collected in across the boroughs.</p>
 </div>
 <div id="figure-2-total-refuse-and-total-organics"
 class="section level3">
@@ -406,6 +459,7 @@ barplot(waste_by_borough_organics$total_organics,
 <li>Explain this figure, including why you had to separate (b/c they are
 on a different scale)</li>
 </ul>
+</div>
 </div>
 <div id="figure-3-trash-by-borough-per-month" class="section level2">
 <h2>Figure 3: Trash by Borough per month</h2>
