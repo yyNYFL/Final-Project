@@ -287,76 +287,42 @@ $(document).ready(function () {
 
 <div id="exploratory-data-analysis" class="section level3">
 <h3>Exploratory Data Analysis</h3>
-<pre class="r"><code>library(tidyverse)
-library(tidyr)
-library(readxl)
-library(stringr)
-library(dbplyr)
-setwd(&quot;/Users/lvrt/Documents/Data Science I/Final Project - Laura&quot;)</code></pre>
+<script language="javascript"> 
+    function toggle(num) {
+      var ele = document.getElementById("toggleText" + num);
+      var text = document.getElementById("displayText" + num);
+      if(ele.style.display == "block") {
+        ele.style.display = "none";
+        text.innerHTML = "show";
+      }
+      else {
+        ele.style.display = "block";
+        text.innerHTML = "hide";
+      }
+   } 
+  </script>
 </div>
 <div id="cleaning-rat-sightings-dataset" class="section level2">
 <h2>Cleaning rat sightings dataset</h2>
-<pre class="r"><code>setwd(&quot;/Users/lvrt/Documents/Data Science I/Final Project - Laura&quot;)
+<a id="displayText" href="javascript:toggle(1);">Show underlying
+code</a>
+<div id="toggleText1" style="display: none">
 
-rat_sightings = 
-  read_csv (&quot;./data/Rat_Sightings.csv&quot;) |&gt;
-  janitor::clean_names(case = &quot;snake&quot;) |&gt;
-  separate(created_date, sep=&quot;/&quot;, into = c(&quot;month&quot;, &quot;day&quot;, &quot;year&quot;)) |&gt; 
-  separate(year, sep=&quot; &quot;, into = c(&quot;year&quot;)) |&gt;
-  filter(borough != &quot;STATEN ISLAND&quot;) |&gt; 
-  filter(year %in% c(&quot;2019&quot;, &quot;2020&quot;, &quot;2021&quot;, &quot;2022&quot;, &quot;2023&quot;)) |&gt;
-  mutate(
-    borough_id = recode(
-      borough, 
-      &quot;MANHATTAN&quot; = 1,
-      &quot;BRONX&quot; =2,
-      &quot;BROOKLYN&quot;=3,
-      &quot;QUEENS&quot;= 4)) |&gt;
-  mutate(
-    month = as.numeric(month),
-    year = as.numeric(year)
-  ) |&gt;
-  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id) |&gt;
-  mutate(
-    borough = str_to_sentence(borough)
-  )</code></pre>
+
+<a id="displayText" href="javascript:toggle(2);">Show underlying
+code</a>
+<div id="toggleText2" style="display: none">
+
 <div id="data-cleaning-for-waste-tonnage-data-n" class="section level3">
 <h3>Data Cleaning for Waste Tonnage data (N)</h3>
-<pre class="r"><code>waste_tonnage = read_csv(&quot;./DSNY_Monthly_Tonnage_Data_20231202.csv&quot;) %&gt;%
-  clean_names(case = &quot;snake&quot;) %&gt;%
-  mutate(date_split = strsplit(month, &quot;/&quot;)) %&gt;%
-  mutate(
-    year = as.integer(sapply(date_split, function(x) x[1])),
-    month = as.integer(sapply(date_split, function(x) x[2]))
-  ) %&gt;%
-  filter(year %in% c(2022, 2023)) %&gt;% 
-  mutate(total_organics = resorganicstons + schoolorganictons)</code></pre>
-<pre><code>## Rows: 23296 Columns: 11
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (3): MONTH, BOROUGH, COMMUNITYDISTRICT
-## dbl (8): REFUSETONSCOLLECTED, PAPERTONSCOLLECTED, MGPTONSCOLLECTED, RESORGAN...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>waste_tonnage = waste_tonnage %&gt;% 
-  group_by(borough, month, year, borough_id) %&gt;% 
-  summarise(
-    total_organics = sum(total_organics, na.rm = TRUE),
-    total_refuse = sum(refusetonscollected, na.rm = TRUE)
-    )</code></pre>
-<pre><code>## `summarise()` has grouped output by &#39;borough&#39;, &#39;month&#39;, &#39;year&#39;. You can
-## override using the `.groups` argument.</code></pre>
 </div>
 <div id="merging-rat-sightings-and-waste-tonnage-data-n"
 class="section level3">
 <h3>Merging rat sightings and waste tonnage data (N)</h3>
-<pre class="r"><code>rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c(&quot;borough_id&quot;, &quot;month&quot;, &quot;year&quot;, &quot;borough&quot;))</code></pre>
 </div>
 </div>
 <div id="filtering-out-the-nas-in-a-dataset-b" class="section level2">
 <h2>filtering out the N/A’s in a dataset (B)</h2>
-<pre class="r"><code>rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) &amp; !is.na(total_refuse))</code></pre>
 </div>
 <div id="plot-1-total-trash-by-borough-for-2022-and-2023-b"
 class="section level2">
@@ -370,7 +336,7 @@ ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = t
   labs(x = &quot;Borough&quot;, y = &quot;Trash Tonnage&quot;, title = &quot;Trash Tonnage by Borough, 2022 - 2023&quot;) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
-<p><img src="eda_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="eda_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 </div>
 <div
 id="bar-graph-by-total-refuse-and-total-organics-had-to-separate-bc-they-are-on-a-different-scale-b"
@@ -387,7 +353,7 @@ barplot(waste_by_borough_refuse$total_refuse,
         col=&quot;blue&quot;,
         names.arg=waste_by_borough_refuse$borough,
         las=2)</code></pre>
-<p><img src="eda_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><img src="eda_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 <pre class="r"><code>waste_by_borough_organics &lt;- aggregate(total_organics ~ borough, data=waste_tonnage, sum)
 
 # barplot for total organics
@@ -398,7 +364,7 @@ barplot(waste_by_borough_organics$total_organics,
         col=&quot;green&quot;,
         names.arg=waste_by_borough_organics$borough,
         las=2)</code></pre>
-<p><img src="eda_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
+<p><img src="eda_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
 </div>
 <div id="plot-2-trash-by-borough-month-b" class="section level2">
 <h2>plot 2: trash by borough &amp; month (B)</h2>
@@ -416,7 +382,7 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
   scale_y_continuous(labels = scales::number_format(scale = 1e-6)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
-<p><img src="eda_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p><img src="eda_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 </div>
 
 

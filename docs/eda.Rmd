@@ -1,5 +1,6 @@
 ---
 title: "EDA"
+code_folding: hide
 ---
 
 ### Exploratory Data Analysis
@@ -12,21 +13,32 @@ library(dplyr)
 library(ggplot2)
 library(stats)
 library(stats)
-```
-
-
-```{r packages, message = FALSE}
-library(tidyverse)
 library(tidyr)
 library(readxl)
 library(stringr)
-library(dbplyr)
 setwd("/Users/lvrt/Documents/Data Science I/Final Project - Laura")
 ```
 
+<script language="javascript"> 
+    function toggle(num) {
+      var ele = document.getElementById("toggleText" + num);
+      var text = document.getElementById("displayText" + num);
+      if(ele.style.display == "block") {
+        ele.style.display = "none";
+        text.innerHTML = "show";
+      }
+      else {
+        ele.style.display = "block";
+        text.innerHTML = "hide";
+      }
+   } 
+  </script>
+
 ## Cleaning rat sightings dataset
 
-```{r import and clean obs, message = FALSE, warning=FALSE}
+<a id="displayText" href="javascript:toggle(1);">Show underlying code</a>
+  <div id="toggleText1" style="display: none">
+```{r import and clean obs, message = FALSE, warning=FALSE, include=FALSE}
 setwd("/Users/lvrt/Documents/Data Science I/Final Project - Laura")
 
 rat_sightings = 
@@ -53,9 +65,11 @@ rat_sightings =
   )
 ```
 
+<a id="displayText" href="javascript:toggle(2);">Show underlying code</a>
+  <div id="toggleText2" style="display: none">
 
 ### Data Cleaning for Waste Tonnage data (N)
-```{r}
+```{r data cleaning, include=FALSE}
 waste_tonnage = read_csv("./DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
   clean_names(case = "snake") %>%
   mutate(date_split = strsplit(month, "/")) %>%
@@ -76,12 +90,12 @@ waste_tonnage = waste_tonnage %>%
 
 
 ### Merging rat sightings and waste tonnage data (N)
-```{r}
+```{r, include=FALSE}
 rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
 ```
 
 ## filtering out the N/A's in a dataset (B)
-```{r}
+```{r, include=FALSE}
 rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(total_refuse))
 ```
 

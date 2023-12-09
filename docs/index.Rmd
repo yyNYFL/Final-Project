@@ -20,14 +20,14 @@ knitr::include_graphics("run this city.jpg")
 ```
 
 <div align="left"> 
-## Introduction
+### Introduction
 
 Rats have become an emblematic reality of New York City. In recent years following the COVID-19 pandemic, concerns over increased rat sightings in NYC have drawn national attention. Previous mayoral administrations have tried to tackle the “War on Rats” with little success. The rat mitigation efforts are a priority for NYC Mayor Eric Adams, who has announced various mitigation efforts since taking office in 2022. One of these efforts is the changing of trash pick-up times. As of April 1, 2023, trash can only be put out on sidewalks after 8pm, a change from the previous rule that allowed trash to be set out after 4pm. 
 
 The growing number of rat sightings are a public health issue. Rats are vectors for many diseases and they can contaminate human food with pathogens as they gnaw on packaging to access food, drop feces, and leave behind other bodily fluids. Our main motivation for this project is to explore rat sighting data in different parts of NYC and assess whether mitigation efforts have had any significant impact on the rat population. Finally, we hope to answer the question: *do rats run this city?*
 
 
-## Data sources
+### Data sources
 
 Data regarding rat sightings, including date, location, borough, and more, are from [NYC Open Data's 311 Rat Sightings](https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe). 
 
