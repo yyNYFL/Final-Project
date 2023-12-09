@@ -1,11 +1,10 @@
 ---
 title: "Rat Mapping"
-author: "Jessie Merrifield"
-date: "2023-12-07"
+runtime: shiny
 output: flexdashboard::flex_dashboard:
     orientation: columns
     vertical_layout: fill
-runtime: shiny
+    source_code: embed
 ---
 
 ```{r setup, include=FALSE}
