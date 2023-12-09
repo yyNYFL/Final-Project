@@ -11,7 +11,7 @@
 
 
 
-<title>Statistical Data Analysis</title>
+<title>sda.knit</title>
 
 <script src="site_libs/header-attrs-2.24/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -295,21 +295,84 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Statistical Data Analysis</h1>
 
 </div>
 
 
-<div id="data-cleaning-for-waste-tonnage-data-n" class="section level3">
-<h3>Data Cleaning for Waste Tonnage data (N)</h3>
+<div id="statistical-data-analysis" class="section level2 tabset">
+<h2 class="tabset">Statistical Data Analysis</h2>
+<div id="rat-sightings-analysis" class="section level3">
+<h3>Rat Sightings Analysis</h3>
+<p>you can put your info here Youssra. just be sure that any heading you
+include in your section have more than 3 hashtags (“####” or more) so it
+doesnt mess up the tabs on the page</p>
 </div>
-<div
-id="anova-to-assess-the-differences-in-waste-tonnage-across-borough"
-class="section level3">
-<h3>ANOVA to assess the differences in waste tonnage across borough</h3>
-<pre class="r"><code>anova_result_organics = aov(total_organics ~ borough, data = waste_tonnage) |&gt; broom::tidy()
-
-anova_result_refuse = aov(total_refuse ~ borough, data = waste_tonnage) |&gt; broom::tidy()</code></pre>
+<div id="waste-tonnage-analysis" class="section level3">
+<h3>Waste Tonnage Analysis</h3>
+<p>The dataset was cleaned to ensure accurate and relevant data for
+analysis. We performed the following steps:</p>
+<ul>
+<li>Standardized column names</li>
+<li>Parsed and converted date information</li>
+<li>Filtered data for the years 2022 and 2023</li>
+<li>Calculated total organics by summing relevant columns</li>
+<li>Aggregated waste tonnage by borough and date</li>
+</ul>
+<div id="anova-for-differences-in-waste-tonnage-across-boroughs"
+class="section level4">
+<h4>ANOVA for Differences in Waste Tonnage Across Boroughs</h4>
+<p>We conducted one-way ANOVA tests to compare the total organic and
+refuse waste tonnage across boroughs. Before interpreting the ANOVA
+results, we checked the assumptions of normality and homogeneity of
+variances.</p>
+<ul>
+<li>Homogeneity of variances, the assumption that the variance within
+each group is the same, was checked using Bartlett’s test. A
+non-significant result (p &gt; 0.05) would suggest that this assumption
+holds true.</li>
+<li>For normality, we examined the residuals of our ANOVA model. The
+residuals should follow a normal distribution for the ANOVA results to
+be valid. This was checked using Q-Q plots, where a close alignment of
+the residuals with the reference line would indicate normality.</li>
+</ul>
+</div>
+<div id="anova-test-for-organic-waste-tonnage" class="section level4">
+<h4>ANOVA Test for Organic Waste Tonnage</h4>
+<pre class="r"><code>anova_model_organics &lt;- aov(total_organics ~ borough, data = waste_tonnage)
+anova_result_organics &lt;- broom::tidy(anova_model_organics)</code></pre>
+</div>
+<div id="anova-test-for-refuse-waste-tonnage" class="section level4">
+<h4>ANOVA Test for Refuse Waste Tonnage</h4>
+<pre class="r"><code>anova_model_refuse &lt;- aov(total_refuse ~ borough, data = waste_tonnage)
+anova_result_refuse &lt;- broom::tidy(anova_model_refuse)</code></pre>
+</div>
+<div id="assumption-checks" class="section level4">
+<h4>Assumption Checks</h4>
+<pre class="r"><code># Normality check with Q-Q plots
+qqnorm(anova_model_organics$residuals)
+qqline(anova_model_organics$residuals)</code></pre>
+<p><img src="sda_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<pre class="r"><code>qqnorm(anova_model_refuse$residuals)
+qqline(anova_model_refuse$residuals)</code></pre>
+<p><img src="sda_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+<pre class="r"><code># Homogeneity of variances check with Bartlett&#39;s test
+bartlett_test_organics &lt;- bartlett.test(total_organics ~ borough, data = waste_tonnage)
+bartlett_test_refuse &lt;- bartlett.test(total_refuse ~ borough, data = waste_tonnage)</code></pre>
+<pre class="r"><code># Output ANOVA results
+list(anova_result_organics, anova_result_refuse)</code></pre>
+<pre><code>## [[1]]
+## # A tibble: 2 × 6
+##   term         df    sumsq  meansq statistic      p.value
+##   &lt;chr&gt;     &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;
+## 1 borough       4 2701708. 675427.      10.5  0.000000296
+## 2 Residuals   112 7209968.  64375.      NA   NA          
+## 
+## [[2]]
+## # A tibble: 2 × 6
+##   term         df        sumsq      meansq statistic   p.value
+##   &lt;chr&gt;     &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 borough       4 37843283363. 9460820841.      82.1  2.19e-32
+## 2 Residuals   112 12913077883.  115295338.      NA   NA</code></pre>
 <p>The one-way ANOVA test was performed to assess the differences in
 organic waste tonnage among the boroughs. The ANOVA test revealed
 statistically significant differences in organic waste tonnage among the
@@ -318,6 +381,8 @@ boroughs (F(4, 112) = 10.5, p &lt; 0.05).</p>
 refuse waste tonnage among the boroughs.The ANOVA test revealed
 statistically significant differences in refuse waste tonnage among the
 boroughs (F(4, 112) = 82.1, p &lt; 0.001).</p>
+</div>
+</div>
 </div>
 
 

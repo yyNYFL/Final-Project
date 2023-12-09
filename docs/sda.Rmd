@@ -1,5 +1,5 @@
 ---
-title: "Statistical Data Analysis"
+title: ""
 output: 
   html_document:
     code_folding: show
@@ -19,9 +19,32 @@ library(stringr)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-### Data Cleaning for Waste Tonnage data (N)
+## Statistical Data Analysis {.tabset}
+
+### Rat Sightings Analysis
+
+you can put your info here Youssra. just be sure that any heading you include in your section have more than 3 hashtags ("####" or more) so it doesnt mess up the tabs on the page
+
+
+
+
+
+
+
+
+
+### Waste Tonnage Analysis
+
+The dataset was cleaned to ensure accurate and relevant data for analysis. We performed the following steps:
+
+* Standardized column names
+* Parsed and converted date information
+* Filtered data for the years 2022 and 2023
+* Calculated total organics by summing relevant columns
+* Aggregated waste tonnage by borough and date
+
 ```{r data cleaning, include=FALSE}
-waste_tonnage = read_csv("./DSNY_Monthly_Tonnage_Data_20231202.csv") |>
+waste_tonnage = read_csv("data/DSNY_Monthly_Tonnage_Data_20231202.csv") |>
   clean_names(case = "snake") |>
   mutate(date_split = strsplit(month, "/")) |>
   mutate(
@@ -29,24 +52,58 @@ waste_tonnage = read_csv("./DSNY_Monthly_Tonnage_Data_20231202.csv") |>
     month = as.integer(sapply(date_split, function(x) x[2]))
   ) |>
   filter(year %in% c(2022, 2023)) |>
-  mutate(total_organics = resorganicstons + schoolorganictons)
-
-waste_tonnage = waste_tonnage |>
+  mutate(total_organics = resorganicstons + schoolorganictons) |>
   group_by(borough, month, year, borough_id) |> 
   summarise(
     total_organics = sum(total_organics, na.rm = TRUE),
     total_refuse = sum(refusetonscollected, na.rm = TRUE)
-    )
+  )
 ```
 
-### ANOVA to assess the differences in waste tonnage across borough
+
+#### ANOVA for Differences in Waste Tonnage Across Boroughs
+
+We conducted one-way ANOVA tests to compare the total organic and refuse waste tonnage across boroughs. Before interpreting the ANOVA results, we checked the assumptions of normality and homogeneity of variances.
+
+* Homogeneity of variances, the assumption that the variance within each group is the same, was checked using Bartlett’s test. A non-significant result (p > 0.05) would suggest that this assumption holds true.
+* For normality, we examined the residuals of our ANOVA model. The residuals should follow a normal distribution for the ANOVA results to be valid. This was checked using Q-Q plots, where a close alignment of the residuals with the reference line would indicate normality.
+
+
+#### ANOVA Test for Organic Waste Tonnage
 ```{r}
+anova_model_organics <- aov(total_organics ~ borough, data = waste_tonnage)
+anova_result_organics <- broom::tidy(anova_model_organics)
+```
 
-anova_result_organics = aov(total_organics ~ borough, data = waste_tonnage) |> broom::tidy()
 
-anova_result_refuse = aov(total_refuse ~ borough, data = waste_tonnage) |> broom::tidy()
+#### ANOVA Test for Refuse Waste Tonnage
+```{r}
+anova_model_refuse <- aov(total_refuse ~ borough, data = waste_tonnage)
+anova_result_refuse <- broom::tidy(anova_model_refuse)
+```
+
+
+#### Assumption Checks
+```{r}
+# Normality check with Q-Q plots
+qqnorm(anova_model_organics$residuals)
+qqline(anova_model_organics$residuals)
+
+qqnorm(anova_model_refuse$residuals)
+qqline(anova_model_refuse$residuals)
+
+# Homogeneity of variances check with Bartlett's test
+bartlett_test_organics <- bartlett.test(total_organics ~ borough, data = waste_tonnage)
+bartlett_test_refuse <- bartlett.test(total_refuse ~ borough, data = waste_tonnage)
 
 ```
+
+```{r}
+# Output ANOVA results
+list(anova_result_organics, anova_result_refuse)
+
+```
+
 
 The one-way ANOVA test was performed to assess the differences in organic waste tonnage among the boroughs. The ANOVA test revealed statistically significant differences in organic waste tonnage among the boroughs (F(4, 112) = 10.5, p < 0.05). 
 
