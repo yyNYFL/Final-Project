@@ -1,9 +1,10 @@
 ---
-title: "Rat Mapping"
+title: "Rat Sightings Maps"
 output: 
   flexdashboard::flex_dashboard:
-    orientation: columns
-    vertical_layout: fill
+    storyboard: true
+    social: menu
+    source: embed
 ---
 
 ```{r setup, include=FALSE}
