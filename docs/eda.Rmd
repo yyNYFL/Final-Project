@@ -15,6 +15,8 @@ library(stats)
 library(tidyr)
 library(readxl)
 library(stringr)
+library(patchwork)
+library(gridExtra)
 
 ```
 
@@ -78,7 +80,7 @@ waste_tonnage = waste_tonnage %>%
 ```
 
 ### Waste Tonnage Data Cleaning
-
+add desc here
 
 
 ```{r merging, include=FALSE}
@@ -113,7 +115,7 @@ waste_by_borough_refuse <- waste_tonnage %>%
 plot_refuse = ggplot(waste_by_borough_refuse, aes(x = reorder(borough, -total_refuse), y = total_refuse)) +
   geom_bar(stat = "identity", fill = "blue4") +
   labs(x = "Borough", y = "Total Refuse (tons)", 
-       title = "Total Refuse Production by Borough (Excluding Staten Island)") +
+       title = "Total Refuse Production by Borough") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -124,13 +126,24 @@ waste_by_borough_organics <- waste_tonnage %>%
 plot_organics = ggplot(waste_by_borough_organics, aes(x = reorder(borough, -total_organics), y = total_organics)) +
   geom_bar(stat = "identity", fill = "green4") +
   labs(x = "Borough", y = "Total Organics (tons)", 
-       title = "Total Organics Production by Borough (Excluding Staten Island)") +
+       title = "Total Organics Production by Borough") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+plot_refuse 
+
+
+
+plot_organics 
+
+
+
+
+
+
 ```
 
-Refuse and Organic waste was separate on to two plots since they have different scales for trash collection.
+Refuse and Organic waste are separate on two plots since they have different scales for trash collection.
 
  "Total Refuse Production by Borough (Excluding Staten Island)," indicates that Brooklyn leads in refuse production, with Queens closely following, indicative of their larger populations and potentially more commercial activity. The Bronx and Manhattan, while still contributing significantly, show lower quantities of refuse. Notably, the volume of refuse is substantially higher than organics, suggesting that non-recyclable and non-compostable waste constitutes a larger proportion of the city’s waste output.
 
