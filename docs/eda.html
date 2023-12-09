@@ -11,7 +11,7 @@
 
 
 
-<title>EDA</title>
+<title>Exploratory Data Analysis</title>
 
 <script src="site_libs/header-attrs-2.24/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -30,6 +30,7 @@
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
@@ -218,6 +219,9 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -278,25 +282,42 @@ $(document).ready(function () {
 
 <div id="header">
 
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
 
 
-<h1 class="title toc-ignore">EDA</h1>
+
+<h1 class="title toc-ignore">Exploratory Data Analysis</h1>
 
 </div>
 
 
-<div id="exploratory-data-analysis" class="section level3">
-<h3>Exploratory Data Analysis</h3>
-</div>
-<div id="cleaning-rat-sightings-dataset" class="section level2">
-<h2>Cleaning rat sightings dataset</h2>
-<div id="data-cleaning-for-waste-tonnage-data-n" class="section level3">
-<h3>Data Cleaning for Waste Tonnage data (N)</h3>
-</div>
-<div id="merging-rat-sightings-and-waste-tonnage-data-n"
-class="section level3">
-<h3>Merging rat sightings and waste tonnage data (N)</h3>
-</div>
+<div id="data-cleaning-and-tidying" class="section level3">
+<h3>Data cleaning and tidying</h3>
+<p>In order to analyze rat sightings, we used 2 data sources from NYC
+Open Data: 311 Rat Sightings and Monthly tonnage data from the NYC
+Department of Sanitation. The 311 Rat Sightings data was filtered to
+exclude observations from Staten Island since there was significantly
+less data from that borough. Since the data set contained data from more
+than 230,000 rat sighting reports from 2010 until present-day, we
+filtered it to only include data from 2019-2023. Only variables of
+interest to our analysis were kept: - <code>unique_key</code> -
+<code>location_type</code> - <code>incident_zip</code> -
+<code>borough</code> - <code>location</code></p>
+<p>Variable <code>created_date</code> was separated to create three new
+variables to allow for analysis: <code>month</code>, <code>day</code>,
+<code>year</code>.</p>
+<ul>
+<li><p>Still need to describe variables, why we created
+borough_id.</p></li>
+<li><p>Describe waste data cleaning/tidying here</p></li>
+<li><p>Describe how we merged here</p></li>
+</ul>
 </div>
 <div id="filtering-out-the-nas-in-a-dataset-b" class="section level2">
 <h2>filtering out the N/A’s in a dataset (B)</h2>
@@ -313,7 +334,7 @@ ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = t
   labs(x = &quot;Borough&quot;, y = &quot;Trash Tonnage&quot;, title = &quot;Trash Tonnage by Borough, 2022 - 2023&quot;) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
-<p><img src="eda_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p><img src="eda_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 </div>
 <div
 id="bar-graph-by-total-refuse-and-total-organics-had-to-separate-bc-they-are-on-a-different-scale-b"
@@ -330,7 +351,7 @@ barplot(waste_by_borough_refuse$total_refuse,
         col=&quot;blue&quot;,
         names.arg=waste_by_borough_refuse$borough,
         las=2)</code></pre>
-<p><img src="eda_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="eda_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 <pre class="r"><code>waste_by_borough_organics &lt;- aggregate(total_organics ~ borough, data=waste_tonnage, sum)
 
 # barplot for total organics
@@ -341,7 +362,7 @@ barplot(waste_by_borough_organics$total_organics,
         col=&quot;green&quot;,
         names.arg=waste_by_borough_organics$borough,
         las=2)</code></pre>
-<p><img src="eda_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+<p><img src="eda_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
 </div>
 <div id="plot-2-trash-by-borough-month-b" class="section level2">
 <h2>plot 2: trash by borough &amp; month (B)</h2>
@@ -359,7 +380,7 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
   scale_y_continuous(labels = scales::number_format(scale = 1e-6)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
-<p><img src="eda_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><img src="eda_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
 </div>
 
 
@@ -395,6 +416,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

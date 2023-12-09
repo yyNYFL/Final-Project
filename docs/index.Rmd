@@ -31,5 +31,9 @@ The growing number of rat sightings are a public health issue. Rats are vectors 
 
 Data regarding rat sightings, including date, location, borough, and more, are from [NYC Open Data's 311 Rat Sightings](https://data.cityofnewyork.us/Social-Services/Rat-Sightings/3q43-55fe). 
 
-Data regarding trash and waste are from [NYC Open Data's Monthly tonnage data for Department of Sanitation](https://data.cityofnewyork.us/City-Government/DSNY-Monthly-Tonnage-Data/ebb7-mvp5). 
+This dataset contains all NYC 311 Service Requests from 2010 to present and is updated daily. It was downloaded and imported with observations as of December 2, 2023. 
+
+Data regarding trash and waste are from the [NYC Open Data's Monthly tonnage data for Department of Sanitation](https://data.cityofnewyork.us/City-Government/DSNY-Monthly-Tonnage-Data/ebb7-mvp5). 
+
+DSNY Monthly Tonnage Data provides monthly collection tonnages that the Department of Sanitation collects from NYC residences and institutions. It was downloaded and imported with observations as of December 2, 2023. 
 

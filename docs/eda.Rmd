@@ -1,10 +1,9 @@
 ---
-title: "EDA"
-code_folding: hide
+title: "Exploratory Data Analysis"
+output: 
+  html_document:
+    code_folding: show
 ---
-
-### Exploratory Data Analysis
-
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(readr)
@@ -19,9 +18,8 @@ library(stringr)
 setwd("/Users/lvrt/Documents/Data Science I/Final Project - Laura")
 ```
 
-## Cleaning rat sightings dataset
 
-```{r import and clean obs, message = FALSE, warning=FALSE, include=FALSE}
+```{r import and clean rat sightings, message = FALSE, warning=FALSE, include=FALSE}
 setwd("/Users/lvrt/Documents/Data Science I/Final Project - Laura")
 
 rat_sightings = 
@@ -48,9 +46,19 @@ rat_sightings =
   )
 ```
 
+### Data cleaning and tidying 
+In order to analyze rat sightings, we used 2 data sources from NYC Open Data: 311 Rat Sightings and Monthly tonnage data from the NYC Department of Sanitation. The 311 Rat Sightings data was filtered to exclude observations from Staten Island since there was significantly less data from that borough. Since the data set contained data from more than 230,000 rat sighting reports from 2010 until present-day, we filtered it to only include data from 2019-2023. Only variables of interest to our analysis were kept: 
+ - `unique_key`
+ - `location_type`
+ - `incident_zip`
+ - `borough`
+ - `location`
 
-### Data Cleaning for Waste Tonnage data (N)
-```{r data cleaning, include=FALSE}
+Variable `created_date` was separated to create three new variables to allow for analysis: `month`, `day`, `year`. 
+
+- Still need to describe variables, why we created borough_id. 
+
+```{r data cleaning waste, include=FALSE}
 waste_tonnage = read_csv("./DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
   clean_names(case = "snake") %>%
   mutate(date_split = strsplit(month, "/")) %>%
@@ -68,12 +76,12 @@ waste_tonnage = waste_tonnage %>%
     total_refuse = sum(refusetonscollected, na.rm = TRUE)
     )
 ```
+- Describe waste data cleaning/tidying here
 
-
-### Merging rat sightings and waste tonnage data (N)
-```{r, include=FALSE}
+```{r merging, include=FALSE}
 rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
 ```
+- Describe how we merged here
 
 ## filtering out the N/A's in a dataset (B)
 ```{r, include=FALSE}
@@ -116,7 +124,6 @@ barplot(waste_by_borough_organics$total_organics,
         col="green",
         names.arg=waste_by_borough_organics$borough,
         las=2)
-
 ```
 
 
