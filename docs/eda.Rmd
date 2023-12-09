@@ -46,19 +46,19 @@ rat_sightings =
 ```
 
 ### Data cleaning and tidying 
-In order to analyze rat sightings, we used 2 data sources from NYC Open Data: 311 Rat Sightings and Monthly tonnage data from the NYC Department of Sanitation. The 311 Rat Sightings data was filtered to exclude observations from Staten Island since there was significantly less data from that borough. Since the data set contained data from more than 230,000 rat sighting reports from 2010 until present-day, we filtered it to only include data from 2019-2023. Only variables of interest to our analysis were kept: 
- - `unique_key`
- - `location_type`
- - `incident_zip`
- - `borough`
- - `location`
+In order to analyze rat sightings, we used 2 data sources from NYC Open Data: 311 Rat Sightings and Monthly tonnage data from the NYC Department of Sanitation. The 311 Rat Sightings data was filtered to exclude observations from Staten Island since there was significantly less data from that borough. This decision aims to maintain consistency and reliability in our analysis by focusing on areas with more robust data. Since the data set contained data from more than 230,000 rat sighting reports from 2010 until present-day, we filtered it to only include data from 2019-2023. Only variables of interest to our analysis were kept: 
+ - `unique_key`: A unique identifier for each rat sighting report.
+ - `location_type`: The type of location where the rat sighting was reported, providing context to the environment of these sightings.
+ - `incident_zip`: The ZIP code of the reported sighting, allowing for geographical analysis.
+ - `borough`: The borough where the sighting occurred, crucial for comparing sightings across different areas of the city.
+ - `location`:: Specific coordinates of the sighting, offering detailed geographical information in regards to latitude and longitude.
 
 Variable `created_date` was separated to create three new variables to allow for analysis: `month`, `day`, `year`. 
 
 - Still need to describe variables, why we created borough_id. 
 
 ```{r data cleaning waste, message = FALSE}
-waste_tonnage = read_csv("./DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
+waste_tonnage = read_csv("data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
   clean_names(case = "snake") %>%
   mutate(date_split = strsplit(month, "/")) %>%
   mutate(
