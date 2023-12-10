@@ -238,26 +238,6 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
 
 Then, we did exploratory analysis for the rat sightings data. 
 
-### Summary statistics
-
-```{r}
-print(names(rat_waste_merged))
-
-rat_waste_merged %>%
-  select(borough, location_type, total_organics, total_refuse) %>%
-  tbl_summary(type = list(borough ~ "categorical", 
-                          location_type ~ "categorical",
-                          total_organics ~ "continuous", 
-                          total_refuse ~ "continuous"), 
-              statistic = list(all_continuous() ~ "{mean} ({sd})"), 
-              digits = all_continuous() ~ 1,
-              label = list(c(borough) ~ "Borough",
-                           c(location_type) ~ "Location Type",
-                           c(total_organics) ~ "Total Organic Waste (Tonnes)",
-                           c(total_refuse) ~ "Total Waste (Tonnes)")) %>%
-  bold_labels()  %>%
-  as_gt()            # convert to gt table
-```
 
 ### Table 1. Rat sightings by location type by year
 
