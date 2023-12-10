@@ -23,14 +23,82 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Rat Sightings Analysis
 
-you can put your info here Youssra. just be sure that any heading you include in your section have more than 3 hashtags ("####" or more) so it doesnt mess up the tabs on the page
+#### ANOVA.
+Analysis of variance of the average rat sightings we saw in the 'rat_boro' kable output. We can see that there are differences in the average rat sightings across years and boros so we wanted to explore if thiese diferences were statistically significant through a ANOVA test. 
+
+```{r import and clean obs, message = FALSE, warning=FALSE}
+
+rat_sightings = 
+  read_csv ("./data/Rat_Sightings.csv") |>
+  janitor::clean_names(case = "snake") |>
+  separate(created_date, sep="/", into = c("month", "day", "year")) |> 
+  separate(year, sep=" ", into = c("year")) |>
+  filter(borough != "STATEN ISLAND") |> 
+  filter(year %in% c("2019", "2020", "2021", "2022", "2023")) |>
+  mutate(
+    borough_id = recode(
+      borough, 
+      "MANHATTAN" = 1,
+      "BRONX" =2,
+      "BROOKLYN"=3,
+      "QUEENS"= 4)) |>
+  mutate(
+    month = as.numeric(month),
+    year = as.numeric(year)
+  ) |>
+  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id) |>
+  mutate(
+    borough = str_to_sentence(borough)
+  )
+rat_sightings_agg = rat_sightings |> 
+  group_by(year, borough, month) |> 
+  filter(borough != "Unspecified") %>% 
+  summarise(count = n())
+
+anova_result = aov(count ~ factor(year) * factor(borough), data = rat_sightings_agg) 
+broom::tidy(anova_result)
+
+anova_result_no_interaction = aov(count ~ factor(year) + factor(borough), data = rat_sightings_agg) 
+broom::tidy(anova_result_no_interaction)
+```
 
 
+We want to check the assumptions for the ANOVA models ran above. There are three assumptions that should be met when computing an ANOVA:
 
+-The response variable must be quantitative- This is met since the response variable of count of rat sightings is quantitative. -The variance between the groups of average rat sightings by borough and by year should be similar and in this case they are. -Observations should be independent of one another- which we are assuming is satisfied. -The distribution of values within each group of rat sightings by borough is normally distributed which we can see in some of the plots. We can also check the normality of residuals in the below code. From the Normal Q-Q plot of both model residuals the points are quite close to the fitted diagonal line. We also conducted Shapiro-Wilk tests for normality of residuals for both models and with a null hypothesis that the residuals follow a normal distribution and an alternative hypothesis that the residuals does not follow a normal distribution. The p-value for the no interaction model is 0.2694 and the p-value for the interaction model is 0.03883. At a 5% level of significance we can conclude the residuals of the interaction model follow a normal distribution but the residuals for the no interaction model do not follow a normal distribution. 
+###Checking assumptions of ANOVA
+```{r}
+# Extract residuals for the interaction model
+residuals_interaction <- residuals(anova_result)
 
+# Check normality of residuals for the interaction model
+qqnorm(anova_result$residuals)
+qqline(anova_result$residuals)
 
+# Shapiro-Wilk test for normality
+shapiro.test(anova_result$residuals)
 
+# Extract residuals for the interaction model
+residuals_no_interaction <- residuals(anova_result_no_interaction)
 
+# Check normality of residuals for the model without interaction
+qqnorm(residuals_no_interaction)
+qqline(residuals_no_interaction)
+
+# Shapiro-Wilk test for normality
+shapiro.test(anova_result_no_interaction$residuals)
+
+# Shapiro-Wilk test for normality
+shapiro.test(residuals_no_interaction)
+
+# Check homoscedasticity for the interaction model
+plot(anova_result$model)
+
+# Check homoscedasticity for the model without interaction
+plot(anova_result_no_interaction$model)
+```
+
+From the ANOVA test for the model with the interaction which is the model that checked all of the assumptions of an ANOVA test above we can see from the p-value of being <0.001 at 5% level of significance we can reject the null hypotheses and conclude that at least one of the average rat sightings by borough and by year are statistically different.
 
 
 ### Waste Tonnage Analysis
