@@ -475,7 +475,7 @@ rats_rule_impact_plot <- rat_sightings_tibble2 %>%
        x = "Date",
        y = "Rat Sightings Count",
        color = "Rule Impact",
-       subtitle = "Comparison Before and After April 2013") +
+       subtitle = "Comparison Before and After April 2023") +
   theme(text = element_text(size = 15), 
         axis.text.x = element_text(angle = 60, hjust = 1, size = 10)) +
   scale_colour_discrete("Year") +
