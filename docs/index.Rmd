@@ -39,8 +39,11 @@ DSNY Monthly Tonnage Data provides monthly collection tonnages that the Departme
 
 ### Screencast
 
-```{r, echo=FALSE, out.width="30%", fig.cap="", fig.align = 'center'}
-knitr::include_graphics("screencast.mp4") 
-```
-
+<div align="center">
+<div class="vid_container">
+  <iframe 
+    src="https://www.youtube.com/embed/kUo6OyNaDb8?si=TI39JqyURfBokQIj"
+    frameborder="0" allowfullscreen class="video">
+  </iframe>
+</div>
 
