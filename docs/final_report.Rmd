@@ -4,6 +4,7 @@ output:
   html_document:
     code_folding: show
 ---
+
 ```{r packages, message = FALSE}
 library(tidyverse)
 library(janitor)
@@ -19,9 +20,9 @@ library(ggplot2)
 library(tibble)
 library(dbplyr)
 library(stats)
+library(gt)
 library(plotly)
 library(ggridges)
-library(forecast)
 library(patchwork)
 library(dplyr)
 library(flexdashboard)
@@ -49,6 +50,7 @@ options(
 scale_colour_discrete = scale_color_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
+
 ## Motivation
 
 The primary goal of this project is to conduct a thorough analysis of rat sightings in New York City, focusing on the periods before and after the implementation of new trash pickup times, which shifted from after 4 pm to after 8 pm as of April 1, 2023. This change is part of Mayor Eric Adams' rat mitigation strategies, and our study aims to assess its effectiveness. 
@@ -60,8 +62,8 @@ As such, this project is  motivated by the need to evaluate public policy effect
 Last but certainly not least, the viral nature of New York City Sanitation Commissioner Jessica Tisch's declaration, "The rats don't run this city, we do," during the announcement of new rules for garbage disposal back in October 2022, significantly contributes to the motivation behind our project. This statement, which quickly became a social media sensation and inspired a wide array of TikTok videos and even merchandise, has heightened our interest in the issue of rat control in New York City.
 
 ## Related work
-We were guided by some of the in-class exercises we did with the NYC Open Data. The restaurant inspection and NYC Airbnb datasets and the exercises we did with those data helped us throughout some of the initial data importing and cleaning, as well as visualizations. We were also inspired by some of the deliverables other organizations have put out. Despite Mayor Eric Adams strongly advocating (https://www.nyc.gov/office-of-the-mayor/news/539-23/mayor-adams-notches-early-victories-war-rats-first-anti-rat-day-action) that the change in trash pickup times would address New York City’s rat problem, articles such as 
-this (https://ny1.com/nyc/all-boroughs/news/2023/03/31/will-setting-trash-bags-out-later-really-disrupt-the-rats--no--experts-say-),state that the effort will have no effect. We wanted to do a through analysis of the rat sightings and trash waste data to be be able to test the effectiveness of the intervention.
+We were guided by some of the in-class exercises we did with the NYC Open Data. The restaurant inspection and NYC Airbnb datasets and the exercises we did with those data helped us throughout some of the initial data importing and cleaning, as well as visualizations. We were also inspired by some of the deliverables other organizations have put out. Despite Mayor Eric Adams [strongly advocating](https://www.nyc.gov/office-of-the-mayor/news/539-23/mayor-adams-notches-early-victories-war-rats-first-anti-rat-day-action) that the change in trash pickup times would address New York City’s rat problem, articles such as 
+[this](https://ny1.com/nyc/all-boroughs/news/2023/03/31/will-setting-trash-bags-out-later-really-disrupt-the-rats--no--experts-say-),state that the effort will have no effect. We wanted to do a through analysis of the rat sightings and trash waste data to be be able to test the effectiveness of the intervention.
 
 ## Questions of interest
 The main question we wanted to answer was:  **What effect did the new trash time rule have on the rat sightings?**
@@ -121,7 +123,12 @@ rat_sightings =
 ```
 
 ### Waste Tonnage: Cleaning and Tidying
-The **monthly waste tonnage** dataset was filtered to have observations from 2022 and 2023 so that the effect of the trash pickup timings in early 2023 is evident. In addition, a new variable `total_organics` was created  as the sum of residential organic waste and school organic waste. The dataset was then grouped by `borough`, `month`, `year` and `borough_id` such that each row of the dataset had `total_organics` and `total_refuse` for each month and each borough in 2022 and 2023.
+
+The **monthly waste tonnage** dataset was filtered to have observations from 2022 and 2023 so that the effect of the trash pickup timings in early 2023 is evident. In addition, a new variable `total_organics` was created  as the sum of residential organic waste and school organic waste. The dataset was then grouped by `borough`, `month`, `year` and `borough_id` such that each row of the dataset had `total_organics` and `total_refuse` for each month and each borough in 2022 and 2023. Only unique variables of interest to our analysis from this dataset that were kept: 
+
+  * `borough_id`: Existing column that uniquely identifies each NYC borough
+  * `total_organics`: Sum of total tons of residential and school organics (food-scraps, food soiled paper and yard waste) in the borough.
+  * `total_refuse`: Sum of total tons of trash collected in residences and institutions by the NYC Department of Sanitation.
   
 ```{r waste cleaning, message=FALSE}
 waste_tonnage = read_csv("./data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
@@ -163,7 +170,41 @@ We used the `left_join` function from the `dplyr` package to merge the rat sight
 
 ## Exploratory analysis
 
-### Figure 1: Trash Tonnage by Borough, 2022 - 2023
+### Summary statistics
+
+```{r, message=FALSE}
+print(names(rat_waste_merged))
+
+rat_waste_merged %>%
+  select(borough, location_type, total_organics, total_refuse) %>%
+  tbl_summary(type = list(borough ~ "categorical", 
+                          location_type ~ "categorical",
+                          total_organics ~ "continuous", 
+                          total_refuse ~ "continuous"), 
+              statistic = list(all_continuous() ~ "{mean} ({sd})"), 
+              digits = all_continuous() ~ 1,
+              label = list(c(borough) ~ "Borough",
+                           c(location_type) ~ "Location Type",
+                           c(total_organics) ~ "Total Organic Waste (Tonnes)",
+                           c(total_refuse) ~ "Total Waste (Tonnes)")) %>%
+  bold_labels()  %>%
+  as_gt() %>%             # convert to gt table
+  gt::gtsave(             # save table as image
+    filename = "table_1_new.png"
+  )
+```
+
+
+```{r, echo=FALSE, out.width="30%", fig.cap="", fig.align = 'center'}
+knitr::include_graphics("table_1.jpg") 
+```
+
+### Visualizations for waste tonnage data
+
+First, we did exploratory analysis via different visualizations for waste tonnage data. 
+
+
+#### Figure 1: Trash Tonnage by Borough, 2022 - 2023
 ```{r figure 1, message = FALSE}
 waste_tonnage_by_borough = rat_waste_filtered |> 
   group_by(borough) |> 
@@ -178,7 +219,7 @@ ggplot(waste_tonnage_by_borough, aes(x = reorder(borough, -total_tonnage), y = t
 
 **Figure 1.** This bar chart shows the total amount of trash (comprising both organics and refuse) collected in each borough of New York City in 2022 and 2023. From the chart, it is evident that *Brooklyn* has the highest total trash tonnage, shown by the tallest bar. The other boroughs—Queens, Manhattan, and the Bronx—are represented with progressively smaller bars, indicating a decrease in the total trash tonnage respectively. Staten Island is not included in the chart, as observations from that borough were excluded. The scientific notation on the y-axis was used for a concise representation of large numbers, indicating the vast scale of waste collected in across the boroughs. 
 
-### Figure 2: Total Refuse Production by Boroughs
+#### Figure 2: Total Refuse Production by Boroughs
 ```{r plot refuse, message = FALSE}
 
 waste_by_borough_refuse <- waste_tonnage %>%
@@ -198,7 +239,7 @@ plot_refuse
 
 **Figure 2.** This plot shows that Brooklyn leads in refuse production, with Queens closely following, indicative of their larger populations and potentially more commercial activity. The Bronx and Manhattan, while still contributing significantly, show lower quantities of refuse. Notably, the volume of refuse is substantially higher than organics, suggesting that non-recyclable and non-compostable waste constitutes a larger proportion of the city’s waste output.
 
-### Figure 3: Total Organics Production by Boroughs
+#### Figure 3: Total Organics Production by Boroughs
 *Refuse and Organic waste are separate on two plots since they have different scales for trash collection.
 
 ```{r plot organics, message = FALSE}
@@ -222,7 +263,7 @@ plot_organics
 
 Comparing the two figures, it is evident that the refuse and organics are managed differently across boroughs, with refuse being the dominant waste type.
 
-### Figure 4: Trash by Borough per month 
+#### Figure 4: Trash by Borough per month 
 ```{r figure 3, message = FALSE}
 total_tonnage_by_borough_year_month = rat_waste_filtered |> 
   group_by(borough, year, month) |> 
@@ -242,8 +283,55 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
 
 **Figure 4.** This multi-line chart tracks the volume of trash, both organics and refuse, collected over time across different boroughs of New York City from early 2022 to the end of 2023. In this visualization, Brooklyn is depicted with a prominent peak, suggesting a significant increase in trash tonnage in summer months, potentially indicative of seasonal variations or specific events impacting waste production. The other boroughs also show variability, with Queens and Manhattan following similar trajectories and the Bronx displaying the least amount of trash tonnage overall. 
 
-### Switching Focus to Rat Sightings
+### Visualizations for rat sightings data
+
+Then, we did exploratory analysis for the rat sightings data. 
+
+#### Table 1. Rat sightings by location type by year
+
+```{r}
+rats_location_type = rat_sightings %>% 
+  janitor::clean_names() %>% 
+  select(location_type, year, unique_key) %>% 
+  group_by(location_type, year) %>% 
+  count() %>% 
+  summarize(avg_rat_sightings = mean(n)) %>% 
+  ungroup %>% 
+  spread(key = year, value = avg_rat_sightings)
+
+knitr::kable(rats_location_type)
+```
+
+
+#### Table 2. Rat sightings by zip codes
+```{r}
+top_zip_codes <- rat_sightings %>%
+  group_by(incident_zip) %>%
+  summarise(total_sightings = n()) %>%
+  arrange(desc(total_sightings)) %>%
+  head()
+kable(top_zip_codes)
+```
+
+**Table 2.** The zip codes with the most 311 rat sightings are in the above kable and are associated in order with the areas of the Upper West Side, Bedford- Stuyvesant, Prospect Heights, Bushwick, Flatbush, and Ridgewood. It is interesting that Brooklyn had more zip codes in top six zipcodes of rat sightings but a Manhattan zipcode had the most rat sightings.
+
+#### Table 3. Rat sightings by month each year 
+
+```{r, message=FALSE}
+# Month with the highest number of rat sightings in each of the five years
+top_month_each_year <- rat_sightings %>%
+  group_by(year, month) %>%
+  summarise(total_sightings = n()) %>%
+  arrange(year, desc(total_sightings)) %>%
+  group_by(year) %>%
+  slice(1)  # Get the top month for each yeartop_month_all_boroughs <- rat_sightings %>%
+kable(top_month_each_year)
+```
+
+**Table 3.**The month with the most rat sightings varied each year so you cannot necesarily see the seasonality of the data just by analyzing the data but when ploting the data by borough, the seasonality is much more apparent.
+
 We were very curious to see how the rat sightings differed across the time period we selected and across boroughs. These sightings are obviously not a measure of actual rat population given that they are based on 311 calls people make but this data is the closest thing we have to a proxy of actual rat populations. Given that, I think a lot of us were biased towards thinking Manhattan would have the most rat sightings and thus by proxy the largest population of rats just based on the density of buildings, people and restaurants. However, following the analysis of trash tonnage it is less suprising that Brooklyn actually leads in rat sightings. 
+
 
 ```{r}
 summary(rat_sightings)
@@ -271,19 +359,17 @@ rats_boro = rat_sightings %>%
 knitr::kable(rats_boro)
 ```
 
-### Formatting the data in a way that makes plotting easier
-```{r}
-
+```{r, message=FALSE}
 rat_sightings_agg = rat_sightings |> 
   group_by(year, borough, month) |> 
   filter(borough != "Unspecified") %>% 
   summarise(count = n())
 ```
 
-We can see from the kable output that there was quite a substantial jump in rat sightings from 2020 to 2021 in all of the boroughs. This may be another COVID phenomena as restaurants shifted to more outdoor dining which deposited more food waste and other things that attract rats onto the streets during the pandemic and after the pandemic when indoor dining became less feasible. https://apnews.com/article/rats-new-york-9dc65afa66a3535cba01b1ea866973a1#. Interestingly, Brooklyn seems to have the highest average of rat sightings amongst the 5 Boros for every year and on the opposite end Queens seems to have the lowest rat sightings pre pandemic but then this year Bronx was the boro with the least rat sightings.
+We can see from the kable output that there was quite a substantial jump in rat sightings from 2020 to 2021 in all of the boroughs. This may be another COVID phenomena as restaurants shifted to more outdoor dining which deposited more food waste and other things that attract rats onto the streets during the pandemic and after the pandemic [when indoor dining became less feasible](https://apnews.com/article/rats-new-york-9dc65afa66a3535cba01b1ea866973a1#.) Interestingly, Brooklyn seems to have the highest average of rat sightings amongst the 5 Boros for every year and on the opposite end Queens seems to have the lowest rat sightings pre pandemic but then this year Bronx was the boro with the least rat sightings.
 
 
-### Figure 5: Rat Sightings Over Time by Borough and Year
+#### Figure 5: Rat Sightings Over Time by Borough and Year
 ```{r}
 rat_sightings_agg <- rat_sightings_agg %>%
   mutate(common_date = paste0(year, "-", month),
@@ -306,8 +392,10 @@ rats_yr_plot <- rat_sightings_agg %>%
   scale_color_viridis_d(end = .8)
 ggplotly(rats_yr_plot)
 ```
+
 **Figure 5.** This plot illustrates the seasonal nature of the rat sightings. we can see an approxsumately normal curve of rat sightings across all boros and years. Across all of the years which are distinguished by the colors the peak of each curve occurs around the spring months of May, June, and July which may have something to do with more people being out and about during those months to encounter the rats. Interestingly, the Bronx experienced its highest number of sightings in 2021 whereas the other three boroughs experienced theirs in 2022.
-### Figure 6: Rat Sightings 
+
+#### Figure 6: Rat Sightings by Borough and Year (Bar Graph)
 ```{r}
  bar_plot <- ggplot(rat_sightings_agg, aes(x = year, y = count)) +
   geom_bar(stat = "identity", position = "dodge", fill = "skyblue") +
@@ -326,10 +414,12 @@ ggplotly(rats_yr_plot)
 
 ggplotly(bar_plot)
 ```
-**Figure 6.** This bar graph gives a more concrete visual of what was discussed earlier where we can see that although the Bronx generally has less sightings than some of the other boros it experienced an uptick in sightings before the three other boros. 
 
-### Figure 7: Time series of rat sightings
-Given the seasonal nature of the rat sightings we saw plotted in the prior plot we wanted to explore how a time series plot would better visualize the data
+**Figure 6.** This bar graph gives a more concrete visual of what was discussed earlier where we can see that although the Bronx generally has less sightings than some of the other boroughs, it experienced an uptick in sightings before the three other boroughs. 
+
+#### Figure 7: Time series of rat sightings
+Given the seasonal nature of the rat sightings we saw plotted in the prior plot, we wanted to explore how a time series plot would better visualize the data.
+
 ```{r}
 rat_sightings_tibble <- rat_sightings_agg %>%
   mutate(common_date = paste0(year, "-", month),
@@ -351,10 +441,10 @@ rats_time_series_plot <- rat_sightings_tibble %>%
 ggplotly(rats_time_series_plot)
 ```
 
-**Figure 7.** This figure further cements the seasonal nature of the rat sightings and does a better job at depicting on the same scale how much the rat sightings jumped following the pandemic. We can also see from this plot that the trash time rule that occured on 04/01/2023 did not make a noticeable impact on the rat sightings and we are assuming by proxy on the rat population.
+**Figure 7.** This figure further cements the seasonal nature of the rat sightings and does a better job at depicting on the same scale how much the rat sightings jumped following the pandemic. We can also see from this plot that the *trash time rule that occured on 04/01/2023 did not make a noticeable impact on the rat sightings and we are assuming by proxy on the rat population.*
 
-### Figure 7: Exploring the forecasting of rat sightings in Brooklyn and the impact of the April 1st Trash Time Change
-Brooklyn has the highest average of rat sightings so a time series decomposition plot with forcasting may shed some light into how the rat sightings would have looked if the trash time rule was not implemented. 
+### Figure 8: Exploring the forecasting of rat sightings in Brooklyn and the impact of the April 1st Trash Time Change
+
 ```{r}
 borough_data <- rat_sightings_tibble %>%
   filter(borough == "Brooklyn")  
@@ -395,10 +485,14 @@ rats_rule_impact_plot <- rat_sightings_tibble2 %>%
 print(rats_rule_impact_plot)
 ```
 
-# Statistical Analysis
+**Figure 8.** Brooklyn has the highest average of rat sightings. This time series decomposition plot with forecasting sheds some light into how the rat sightings would have looked if the trash time rule was not implemented.
 
-### Rat Sightings ANOVA
-Analysis of variance of the average rat sightings we saw in the 'rat_boro' kable output. We can see that there are differences in the average rat sightings across years and boros so we wanted to explore if thiese diferences were statistically significant through a ANOVA test. 
+
+### Rat Sightings Analysis
+
+#### ANOVA
+
+We can see that there are differences in the average rat sightings across years and boroughs. Through ANOVA, we can see if these differences are statistically significant. 
 ```{r}
 rat_sightings_agg = rat_sightings |> 
   group_by(year, borough, month) |> 
@@ -412,11 +506,16 @@ anova_result_no_interaction = aov(count ~ factor(year) + factor(borough), data =
 broom::tidy(anova_result_no_interaction)
 ```
 
-We want to check the assumptions for the ANOVA models ran above. There are three assumptions that should be met when computing an ANOVA:
+We want to check the assumptions for the ANOVA tests ran above. There are three assumptions that should be met when computing an ANOVA:
 
--The response variable must be quantitative- This is met since the response variable of count of rat sightings is quantitative. -The variance between the groups of average rat sightings by borough and by year should be similar and in this case they are. -Observations should be independent of one another- which we are assuming is satisfied. -The distribution of values within each group of rat sightings by borough is normally distributed which we can see in some of the plots. We can also check the normality of residuals in the below code. From the Normal Q-Q plot of both model residuals the points are quite close to the fitted diagonal line. We also conducted Shapiro-Wilk tests for normality of residuals for both models and with a null hypothesis that the residuals follow a normal distribution and an alternative hypothesis that the residuals does not follow a normal distribution. The p-value for the no interaction model is 0.2694 and the p-value for the interaction model is 0.03883. At a 5% level of significance we can conclude the residuals of the interaction model follow a normal distribution but the residuals for the no interaction model do not follow a normal distribution. 
+  * The response variable must be quantitative: This is met since the response variable of count of rat sightings is quantitative.
+  * The variance between the groups of average rat sightings by borough and by year should be similar: This is met.
+  * Observations should be independent of one another: This is met based on nature of dataset.
+  * The distribution of values within each group of rat sightings by borough is normally distributed. This is met, apparent in the plots.
 
-###Checking assumptions of ANOVA
+We also checked the normality of residuals in the below code. From the Normal Q-Q plot of both model residuals, the points are quite close to the fitted diagonal line. We also conducted Shapiro-Wilk tests for normality of residuals for both models and with a null hypothesis that the residuals follow a normal distribution and an alternative hypothesis that the residuals does not follow a normal distribution. The p-value for the no interaction model is 0.2694 and the p-value for the interaction model is 0.03883. At a 5% level of significance, we can conclude that the residuals of the interaction model follow a normal distribution but the residuals for the no interaction model do not follow a normal distribution. 
+
+##### Checking assumptions of ANOVA
 ```{r}
 # Extract residuals for the interaction model
 residuals_interaction <- residuals(anova_result)
@@ -447,20 +546,12 @@ plot(anova_result$model)
 # Check homoscedasticity for the model without interaction
 plot(anova_result_no_interaction$model)
 ```
+The ANOVA test for the interaction model, which met all of the assumptions of an ANOVA test, results in a p-value <0.001 at 5% level of significance. We can conclude that the average sightings by borough and by year are statistically different. 
 
-From the ANOVA test for the model with the interaction which is the model that checked all of the assumptions of an ANOVA test above we can see from the p-value being <0.001 we can reject the null hypotheses and conclude that at least one of the average rat sightings by borough and by year are statistically different.
-
-## Waste Tonnage ANOVA
-
-The dataset was cleaned to ensure accurate and relevant data for analysis. We performed the following steps:
-
-* Standardized column names
-* Parsed and converted date information
-* Filtered data for the years 2022 and 2023
-* Calculated total organics by summing relevant columns
-* Aggregated waste tonnage by borough and date
+### Waste Tonnage Analysis
 
 ```{r data cleaning, include=FALSE}
+#data import/clean to be able to run tests
 waste_tonnage = read_csv("data/DSNY_Monthly_Tonnage_Data_20231202.csv") |>
   clean_names(case = "snake") |>
   mutate(date_split = strsplit(month, "/")) |>
@@ -477,28 +568,23 @@ waste_tonnage = read_csv("data/DSNY_Monthly_Tonnage_Data_20231202.csv") |>
   )
 ```
 
-We conducted one-way ANOVA tests to compare the total organic and refuse waste tonnage across boroughs. Before interpreting the ANOVA results, we checked the assumptions of normality and homogeneity of variances.
+#### ANOVA
+
+We conducted one-way ANOVA tests to compare the `total_organic` and `total_refuse` waste tonnage across boroughs. Before interpreting the ANOVA results, we checked the assumptions of normality and homogeneity of variances.
 
 * Homogeneity of variances, the assumption that the variance within each group is the same, was checked using Bartlett’s test. A non-significant result (p > 0.05) would suggest that this assumption holds true.
+
 * For normality, we examined the residuals of our ANOVA model. The residuals should follow a normal distribution for the ANOVA results to be valid. This was checked using Q-Q plots, where a close alignment of the residuals with the reference line would indicate normality.
 
-
-#### ANOVA Test for Organic Waste Tonnage
+##### ANOVA Tests and Assumption Checks
 ```{r}
+#ANOVA tests for both organic and refuse 
 anova_model_organics <- aov(total_organics ~ borough, data = waste_tonnage)
 anova_result_organics <- broom::tidy(anova_model_organics)
-```
 
-
-#### ANOVA Test for Refuse Waste Tonnage
-```{r}
 anova_model_refuse <- aov(total_refuse ~ borough, data = waste_tonnage)
 anova_result_refuse <- broom::tidy(anova_model_refuse)
-```
 
-
-#### Assumption Checks
-```{r}
 # Normality check with Q-Q plots
 qqnorm(anova_model_organics$residuals)
 qqline(anova_model_organics$residuals)
@@ -510,18 +596,13 @@ qqline(anova_model_refuse$residuals)
 bartlett_test_organics <- bartlett.test(total_organics ~ borough, data = waste_tonnage)
 bartlett_test_refuse <- bartlett.test(total_refuse ~ borough, data = waste_tonnage)
 
-```
-
-```{r}
 # Output ANOVA results
 list(anova_result_organics, anova_result_refuse)
-
 ```
 
+The ANOVA test was performed to assess the differences in organic waste tonnage across the boroughs. This revealed statistically significant differences in organic waste tonnage among the boroughs (F(4, 112) = 10.5, p < 0.05). 
 
-The one-way ANOVA test was performed to assess the differences in organic waste tonnage among the boroughs. The ANOVA test revealed statistically significant differences in organic waste tonnage among the boroughs (F(4, 112) = 10.5, p < 0.05). 
-
-A one-way ANOVA test was conducted to examine the differences in refuse waste tonnage among the boroughs.The ANOVA test revealed statistically significant differences in refuse waste tonnage among the boroughs (F(4, 112) = 82.1, p < 0.001).
+Similarly, the ANOVA test was conducted to examine the differences in refuse waste tonnage across the boroughs.The ANOVA test revealed statistically significant differences in refuse waste tonnage among the boroughs (F(4, 112) = 82.1, p < 0.001).
 
 
 ### Linear Model 
@@ -529,7 +610,6 @@ A one-way ANOVA test was conducted to examine the differences in refuse waste to
 The rat sightings data set was cleaned to show the number of rat sightings for 2022 and 2023 by year, month, and borough. Then, the rat sightings data was merged with the waste tonnage data by year, month, and borough. 
 
 ```{r, message=FALSE}
-
 rat_count_month <- rat_sightings %>% 
   select(unique_key, month, year, borough, borough_id) %>% 
   filter(year %in% c("2022", "2023"), borough != "Unspecified") %>%
@@ -537,20 +617,9 @@ rat_count_month <- rat_sightings %>%
   summarise(sighting_n = n_distinct(unique_key)) 
 
 
-rat_sightings$borough_id <- as.factor(rat_sightings$borough_id)
-rat_sightings$month <- as.factor(rat_sightings$month)
-rat_sightings$year <- as.factor(rat_sightings$year)
-rat_sightings$borough <- as.factor(rat_sightings$borough)
-
-waste_tonnage$borough_id <- as.factor(waste_tonnage$borough_id)
-waste_tonnage$month <- as.factor(waste_tonnage$month)
-waste_tonnage$year <- as.factor(waste_tonnage$year)
-waste_tonnage$borough <- as.factor(waste_tonnage$borough)
-
-rat_waste_month_merged <- left_join(rat_count_month, waste_tonnage, by = c("borough_id", "month", "year", "borough")) %>%
-  mutate(month = as.character(month),
-         year = as.character(year)) 
-
+rat_waste_month_merged = left_join(rat_count_month, waste_tonnage, by = c("borough_id", "month", "year", "borough"))%>% 
+  mutate(month=as.character(month),
+         year=as.character(year))
 ```
 
 #### Linear Regression model for the number of rat sightings by total refuse, borough, year, and month.
@@ -568,8 +637,7 @@ rat_sightings_fit |>
   knitr::kable(digits = 3)
 ```
 
-
-With an R^2^ = 0.752, the independent variables (total waste, borough, year) in this model appear to explain about 75.2.2% of the variance in the dependent variable (number of rat sightings).
+**With an R^2^ = 0.752, the independent variables (total waste, borough, year) in this model appear to explain about 75.2.2% of the variance in the dependent variable (number of rat sightings).**
 
 
 ```{r}
@@ -584,21 +652,21 @@ rat_sightings_fit|>
 
 #### Interpretations:
 
-Total Waste
-- For every unit increase in total waste, the number of rat sightings increased by 0.005532, adjusting for borough, and year. At a 5% level of significance, there was a statistically significant relationship between the number of rat sightings and the total waste (_P_<0.001).
+**Total Waste**
+For every unit increase in total waste, the number of rat sightings increased by 0.005532, adjusting for borough, and year. At a 5% level of significance, there was a statistically significant relationship between the number of rat sightings and the total waste (_P_<0.001).
 
 
-Year
--There was not a statistically significant relationship between the number of rat sightings and year at the 5% level of significance (_P_=0.57), adjusting for total waste and year. 
+**Year**
+There was not a statistically significant relationship between the number of rat sightings and year at the 5% level of significance (_P_=0.57), adjusting for total waste and year. 
 
 
-Borough:
+**Borough**
 
-Queens: The number of rat sightings in Queens was not significantly different from the numnber of rat sightings in the Bronx at the 5% level of significance (_P_=0.007), adjusting for total waste and year. 
+**Queens**: The number of rat sightings in Queens was not significantly different from the numnber of rat sightings in the Bronx at the 5% level of significance (_P_=0.007), adjusting for total waste and year. 
 
-Manhattan: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
+**Manhattan**: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
 
-Brooklyn: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year.
+**Brooklyn**: The number of rat sightings in Brooklyn was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
 
 
 ## Discussion: 
