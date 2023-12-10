@@ -17,7 +17,48 @@ library(readxl)
 library(stringr)
 library(patchwork)
 library(gridExtra)
+library(knitr)
+library(tidyverse)
+library(janitor)
+library(knitr)
+library(tidyr)
+library(readxl)
+library(lubridate)
+library(readr)
+library(stringr)
+library(ggplot2)
+library(tibble)
+library(dbplyr)
+library(stats)
+library(plotly)
+library(ggridges)
+library(forecast)
+library(patchwork)
+library(dplyr)
+library(flexdashboard)
+library(leaflet)
+library(shiny)
 
+library(leaflet.providers)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 8, 
+  fig.height = 7,
+  out.width = "90%"
+)
+
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 ```
 
 ```{r import and clean rat sightings, message = FALSE, warning=FALSE}
@@ -167,3 +208,184 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
 ```
 
 **Figure 4.** This multi-line chart tracks the volume of trash, both organics and refuse, collected over time across different boroughs of New York City from early 2022 to the end of 2023. In this visualization, Brooklyn is depicted with a prominent peak, suggesting a significant increase in trash tonnage in summer months, potentially indicative of seasonal variations or specific events impacting waste production. The other boroughs also show variability, with Queens and Manhattan following similar trajectories and the Bronx displaying the least amount of trash tonnage overall. 
+
+### What are the zip_codes with the highest number of rat sightings?
+```{r}
+top_zip_codes <- rat_sightings %>%
+  group_by(incident_zip) %>%
+  summarise(total_sightings = n()) %>%
+  arrange(desc(total_sightings)) %>%
+  head()
+kable(top_zip_codes)
+
+```
+
+The zip codes with the most 311 rat sightings are in the above kable and are associated in order with the areas of the Upper West Side, Bedford- Stuyvesant, Prospect Heights, Bushwick, Flatbush, and Ridgewood. It is interesting that Brooklyn had more zip codes in top six zipcodes of rat sightings but a Manhattan zipcode had the most rat sightings.
+
+### What month had the highest number of rat sightings in each year?
+
+```{r}
+# Month with the highest number of rat sightings in each of the five years
+top_month_each_year <- rat_sightings %>%
+  group_by(year, month) %>%
+  summarise(total_sightings = n()) %>%
+  arrange(year, desc(total_sightings)) %>%
+  group_by(year) %>%
+  slice(1)  # Get the top month for each yeartop_month_all_boroughs <- rat_sightings %>%
+kable(top_month_each_year)
+```
+
+The month with the most rat sightings varied each year so you cannot necesarily see the seasonality of the data just be analyzing the data but when ploting the data by borough the seasonality is much more apparent.
+
+### Switching Focus to Rat Sightings
+We were very curious to see how the rat sightings differed across the time period we selected and across boroughs. These sightings are obviously not a measure of actual rat population given that they are based on 311 calls people make but this data is the closest thing we have to a proxy of actual rat populations. Given that, I think a lot of us were biased towards thinking Manhattan would have the most rat sightings and thus by proxy the largest population of rats just based on the density of buildings, people and restaurants. However, following the analysis of trash tonnage it is less suprising that Brooklyn actually leads in rat sightings. 
+
+```{r}
+summary(rat_sightings)
+variable_types <- sapply(rat_sightings, class)
+print(variable_types)
+# variables are not classified well for analysis so will need to convert numeric variables
+numeric_vars_to_convert <- c("unique_key", "month", "year", "incident_zip", "borough_id")
+
+rat_sightings <- rat_sightings %>% 
+  mutate(across(all_of(numeric_vars_to_convert), as.factor))
+        
+variable_types <- sapply(rat_sightings, class)
+print(variable_types)
+
+# number of rat sightings by boro each year
+rats_boro = rat_sightings %>% 
+  janitor::clean_names() %>% 
+  select(borough, year, unique_key) %>% 
+  group_by(borough, year) %>% 
+  count() %>% 
+  summarize(avg_rat_sightings = mean(n)) %>% 
+  ungroup %>% 
+  spread(key = year, value = avg_rat_sightings) %>% 
+  filter(borough != 'Unspecified')# I want to remove the unsepcified
+knitr::kable(rats_boro)
+```
+
+### Formatting the data in a way that makes plotting easier
+```{r}
+
+rat_sightings_agg = rat_sightings |> 
+  group_by(year, borough, month) |> 
+  filter(borough != "Unspecified") %>% 
+  summarise(count = n())
+```
+
+We can see from the kable output that there was quite a substantial jump in rat sightings from 2020 to 2021 in all of the boroughs. This may be another COVID phenomena as restaurants shifted to more outdoor dining which deposited more food waste and other things that attract rats onto the streets during the pandemic and after the pandemic when indoor dining became less feasible. https://apnews.com/article/rats-new-york-9dc65afa66a3535cba01b1ea866973a1#. Interestingly, Brooklyn seems to have the highest average of rat sightings amongst the 5 Boros for every year and on the opposite end Queens seems to have the lowest rat sightings pre pandemic but then this year Bronx was the boro with the least rat sightings.
+
+
+### Figure 5: Rat Sightings Over Time by Borough and Year
+```{r}
+rat_sightings_agg <- rat_sightings_agg %>%
+  mutate(common_date = paste0(year, "-", month),
+         common_date = lubridate::ym(common_date))
+
+# Plot rat sightings over time
+rats_yr_plot <- rat_sightings_agg %>%
+  ggplot(aes(x = common_date, y = count, group = year, color = year)) +
+  geom_point(alpha = .3) +
+  geom_smooth(se = FALSE) +
+  facet_wrap(~ borough, scales = "free_y", ncol = 2) +  # Facet wrap by borough
+  labs(
+    title = "Rat Sightings Over Time",
+       x = "Date",
+       y = "Rat Sightings Count") +
+  theme(text = element_text(size = 15), 
+        axis.text.x = element_text(angle = 60, hjust = 1, size = 10)) +
+  scale_colour_discrete("Year") +
+  scale_x_date(date_breaks = "3 month", labels = function(x) format(x, "%b")) +
+  scale_color_viridis_d(end = .8)
+ggplotly(rats_yr_plot)
+```
+**Figure 5.** This plot illustrates the seasonal nature of the rat sightings. we can see an approxsumately normal curve of rat sightings across all boros and years. Across all of the years which are distinguished by the colors the peak of each curve occurs around the spring months of May, June, and July which may have something to do with more people being out and about during those months to encounter the rats. Interestingly, the Bronx experienced its highest number of sightings in 2021 whereas the other three boroughs experienced theirs in 2022.
+### Figure 6: Rat Sightings 
+```{r}
+ bar_plot <- ggplot(rat_sightings_agg, aes(x = year, y = count)) +
+  geom_bar(stat = "identity", position = "dodge", fill = "skyblue") +
+  facet_wrap(~borough, scales = "free_y") +
+  theme(
+    legend.position = "bottom",
+    axis.text.y = element_text(color = "black", size = 10, hjust = 1),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10)
+  ) +
+  labs(
+    x = "Year",
+    y = "Count of Rat Sightings",
+    title = "Rat Sightings Across Time and Borough",
+  ) +
+  viridis::scale_colour_viridis()
+
+ggplotly(bar_plot)
+```
+**Figure 6.** This bar graph gives a more concrete visual of what was discussed earlier where we can see that although the Bronx generally has less sightings than some of the other boros it experienced an uptick in sightings before the three other boros. 
+
+### Figure 7: Time series of rat sightings
+Given the seasonal nature of the rat sightings we saw plotted in the prior plot we wanted to explore how a time series plot would better visualize the data
+```{r}
+rat_sightings_tibble <- rat_sightings_agg %>%
+  mutate(common_date = paste0(year, "-", month),
+         common_date = lubridate::ym(common_date)) %>%
+  as_tibble(index = common_date, key = borough) %>%
+  select(borough, common_date, count)  # Include common_date in the select statement
+
+# Time series plot
+rats_time_series_plot <- rat_sightings_tibble %>%
+  ggplot(aes(x = common_date, y = count, color = borough, group = borough)) +
+  geom_line() +
+  labs(title = "Rat Sightings Time Series",
+       x = "Date",
+       y = "Rat Sightings Count",
+       color = "Borough") +
+  theme_minimal()
+
+# Print the plot
+ggplotly(rats_time_series_plot)
+```
+
+**Figure 7.** This figure further cements the seasonal nature of the rat sightings and does a better job at depicting on the same scale how much the rat sightings jumped following the pandemic. We can also see from this plot that the trash time rule that occured on 04/01/2023 did not make a noticeable impact on the rat sightings and we are assuming by proxy on the rat population.
+
+### Figure 7: Exploring the forecasting of rat sightings in Brooklyn and the impact of the April 1st Trash Time Change
+Brooklyn has the highest average of rat sightings so a time series decomposition plot with forcasting may shed some light into how the rat sightings would have looked if the trash time rule was not implemented. 
+```{r}
+borough_data <- rat_sightings_tibble %>%
+  filter(borough == "Brooklyn")  
+
+# Convert data to a univariate time series
+ts_data <- ts(borough_data$count, frequency = 12)  
+# Time series analysis using STL decomposition
+ts_analysis <- stlf(ts_data, h = 12)  
+
+# Plot time series decomposition
+autoplot(ts_analysis) +
+  labs(title = "Time Series Decomposition",
+       y = "Rat Sightings Count",
+       color = "Components") +
+  theme_minimal()
+
+rat_sightings_tibble2 <- rat_sightings_agg %>%
+  mutate(common_date = paste0(year, "-", month, "-01"),
+         common_date = lubridate::ymd(common_date),
+         rule_impact = ifelse(common_date >= "2023-04-01", "After", "Before")) %>%
+  as_tibble(index = common_date, key = c(borough, rule_impact)) %>%
+  select(borough, common_date, count, rule_impact)
+
+rats_rule_impact_plot <- rat_sightings_tibble2 %>%
+  ggplot(aes(x = common_date, y = count, color = rule_impact, group = interaction(borough, rule_impact))) +
+  geom_line() +
+  labs(title = "Impact of Rat Extermination Rule",
+       x = "Date",
+       y = "Rat Sightings Count",
+       color = "Rule Impact",
+       subtitle = "Comparison Before and After April 2013") +
+  theme(text = element_text(size = 15), 
+        axis.text.x = element_text(angle = 60, hjust = 1, size = 10)) +
+  scale_colour_discrete("Year") +
+  scale_x_date(date_breaks = "3 month", labels = function(x) format(x, "%b")) +
+  scale_color_viridis_d(end = .8)
+
+print(rats_rule_impact_plot)
+```
