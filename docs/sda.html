@@ -13,7 +13,7 @@
 
 <title>sda.knit</title>
 
-<script src="site_libs/header-attrs-2.25/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.24/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/simplex.min.css" rel="stylesheet" />
@@ -498,6 +498,172 @@ boroughs (F(4, 112) = 10.5, p &lt; 0.05).</p>
 refuse waste tonnage among the boroughs.The ANOVA test revealed
 statistically significant differences in refuse waste tonnage among the
 boroughs (F(4, 112) = 82.1, p &lt; 0.001).</p>
+</div>
+</div>
+<div id="linear-model" class="section level3">
+<h3>Linear Model</h3>
+<p>The rat sightings data set was cleaned to show the number of rat
+sightings for 2022 and 2023 by year, month, and borough. Then, the rat
+sightings data was merged with the waste tonnage data by year, month,
+and borough.</p>
+<pre class="r"><code>rat_count_month &lt;- rat_sightings %&gt;% 
+  select(unique_key, month, year, borough, borough_id) %&gt;% 
+  filter(year %in% c(&quot;2022&quot;, &quot;2023&quot;), borough != &quot;Unspecified&quot;) %&gt;%
+  group_by(borough, borough_id, year, month) %&gt;% 
+  summarise(sighting_n = n_distinct(unique_key)) 
+
+
+rat_waste_month_merged = left_join(rat_count_month, waste_tonnage, by = c(&quot;borough_id&quot;, &quot;month&quot;, &quot;year&quot;, &quot;borough&quot;))%&gt;% 
+  mutate(month=as.character(month),
+         year=as.character(year))</code></pre>
+<div
+id="linear-regression-model-for-the-number-of-rat-sightings-by-total-refuse-borough-year-and-month."
+class="section level4">
+<h4>Linear Regression model for the number of rat sightings by total
+refuse, borough, year, and month.</h4>
+<pre class="r"><code>rat_sightings_fit &lt;- lm(sighting_n ~ total_refuse + borough + year, data = rat_waste_month_merged)</code></pre>
+<p>y(Number of Rat Sightings) = Intercept + Total Waste (x<sub>1</sub>)
++ Borough (x<sub>2</sub>) + Year (x<sub>3</sub>)</p>
+<pre class="r"><code>rat_sightings_fit |&gt; 
+  broom::glance()|&gt; 
+  knitr::kable(digits = 3)</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="9%" />
+<col width="13%" />
+<col width="7%" />
+<col width="9%" />
+<col width="7%" />
+<col width="2%" />
+<col width="8%" />
+<col width="8%" />
+<col width="8%" />
+<col width="8%" />
+<col width="11%" />
+<col width="4%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">r.squared</th>
+<th align="right">adj.r.squared</th>
+<th align="right">sigma</th>
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+<th align="right">df</th>
+<th align="right">logLik</th>
+<th align="right">AIC</th>
+<th align="right">BIC</th>
+<th align="right">deviance</th>
+<th align="right">df.residual</th>
+<th align="right">nobs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.752</td>
+<td align="right">0.737</td>
+<td align="right">129.797</td>
+<td align="right">52.096</td>
+<td align="right">0</td>
+<td align="right">5</td>
+<td align="right">-575.109</td>
+<td align="right">1164.219</td>
+<td align="right">1181.871</td>
+<td align="right">1448862</td>
+<td align="right">86</td>
+<td align="right">92</td>
+</tr>
+</tbody>
+</table>
+<p>With an R<sup>2</sup> = 0.752, the independent variables (total
+waste, borough, year) in this model appear to explain about 75.2.2% of
+the variance in the dependent variable (number of rat sightings).</p>
+<pre class="r"><code>rat_sightings_fit|&gt; 
+  broom::tidy() |&gt; 
+  select(term, estimate, std.error, statistic, p.value) |&gt; 
+  mutate(term = str_replace(term, &quot;^borough&quot;, &quot;Borough: &quot;)) |&gt; 
+  mutate(term = str_replace(term, &quot;^total_refuse&quot;, &quot;Total Waste&quot;)) |&gt; 
+  mutate(term = str_replace(term, &quot;^year&quot;, &quot;Year: &quot;)) |&gt; 
+  knitr::kable(digits = 6)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">(Intercept)</td>
+<td align="right">137.557270</td>
+<td align="right">63.639726</td>
+<td align="right">2.161500</td>
+<td align="right">0.033436</td>
+</tr>
+<tr class="even">
+<td align="left">Total Waste</td>
+<td align="right">0.005532</td>
+<td align="right">0.001618</td>
+<td align="right">3.418234</td>
+<td align="right">0.000965</td>
+</tr>
+<tr class="odd">
+<td align="left">Borough: Brooklyn</td>
+<td align="right">343.724245</td>
+<td align="right">66.843236</td>
+<td align="right">5.142244</td>
+<td align="right">0.000002</td>
+</tr>
+<tr class="even">
+<td align="left">Borough: Manhattan</td>
+<td align="right">275.870898</td>
+<td align="right">38.331153</td>
+<td align="right">7.197042</td>
+<td align="right">0.000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Borough: Queens</td>
+<td align="right">-101.084602</td>
+<td align="right">54.651270</td>
+<td align="right">-1.849629</td>
+<td align="right">0.067802</td>
+</tr>
+<tr class="even">
+<td align="left">Year: 2023</td>
+<td align="right">15.873828</td>
+<td align="right">27.867071</td>
+<td align="right">0.569627</td>
+<td align="right">0.570416</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="interpretations" class="section level4">
+<h4>Interpretations:</h4>
+<p>Total Waste - For every unit increase in total waste, the number of
+rat sightings increased by 0.005532, adjusting for borough, and year. At
+a 5% level of significance, there was a statistically significant
+relationship between the number of rat sightings and the total waste
+(<em>P</em>&lt;0.001).</p>
+<p>Year -There was not a statistically significant relationship between
+the number of rat sightings and year at the 5% level of significance
+(<em>P</em>=0.57), adjusting for total waste and year.</p>
+<p>Borough:</p>
+<p>Queens: The number of rat sightings in Queens was not significantly
+different from the numnber of rat sightings in the Bronx at the 5% level
+of significance (<em>P</em>=0.007), adjusting for total waste and
+year.</p>
+<p>Manhattan: The number of rat sightings in Manhattan was significantly
+different from the number of rat sightings in the Bronx at the 5% level
+of significance (<em>P</em>&lt;0.001), adjusting for total waste and
+year.</p>
+<p>Brooklyn: The number of rat sightings in Manhattan was significantly
+different from the number of rat sightings in the Bronx at the 5% level
+of significance (<em>P</em>&lt;0.001), adjusting for total waste and
+year.</p>
 </div>
 </div>
 </div>

@@ -1,0 +1,101 @@
+---
+title: "linear_model"
+author: "Jessie Merrifield"
+date: "2023-12-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggridges)
+library(patchwork)
+library(dplyr)
+library(janitor)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 8, 
+  fig.height = 7,
+  out.width = "90%"
+)
+
+
+```
+
+
+```{r import and clean obs, message = FALSE, warning=FALSE}
+
+rat_sightings = 
+  read_csv ("./data/Rat_Sightings.csv") |>
+  janitor::clean_names(case = "snake") |>
+  separate(created_date, sep="/", into = c("month", "day", "year")) |> 
+  separate(year, sep=" ", into = c("year")) |>
+  filter(borough != "STATEN ISLAND") |> 
+  filter(year %in% c("2019", "2020", "2021", "2022", "2023")) |>
+  mutate(
+    borough_id = recode(
+      borough, 
+      "MANHATTAN" = 1,
+      "BRONX" =2,
+      "BROOKLYN"=3,
+      "QUEENS"= 4)) |>
+  mutate(
+    month = as.numeric(month),
+    year = as.numeric(year)
+  ) |>
+  select(unique_key, month, day, year, location_type, incident_zip, borough, location, borough_id) |>
+  mutate(
+    borough = str_to_sentence(borough)
+  )
+```
+
+
+```{r data cleaning waste, message = FALSE}
+waste_tonnage = read_csv("data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
+  clean_names(case = "snake") %>%
+  mutate(date_split = strsplit(month, "/")) %>%
+  mutate(
+    year = as.integer(sapply(date_split, function(x) x[1])),
+    month = as.integer(sapply(date_split, function(x) x[2]))
+  ) %>%
+  filter(year %in% c(2022, 2023)) %>% 
+  mutate(total_organics = resorganicstons + schoolorganictons)
+
+waste_tonnage = waste_tonnage %>% 
+  group_by(borough, month, year, borough_id) %>% 
+  summarise(
+    total_organics = sum(total_organics, na.rm = TRUE),
+    total_refuse = sum(refusetonscollected, na.rm = TRUE)
+    )
+```
+
+
+```{r}
+rat_count_month <- rat_sightings %>% 
+  select(unique_key, month, year, borough, borough_id) %>% 
+  filter(year %in% c("2022", "2023"), borough != "Unspecified") %>%
+  group_by(borough, borough_id, year, month) %>% 
+  summarise(sighting_n = n_distinct(unique_key))
+#created a dataset for the number of rat counts by month
+```
+```{r}
+rat_waste_month_merged = left_join(rat_count_month, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
+#merging waste and rat sightings datasets
+```
+
+The rat sightings and waste tonnage datasets were merged by NYC borough, year (limited to 2022 and 2023), and month. 
+
+### Linear Regression model for the number of rat sightings by total refuse, borough, year, and month.
+```{r}
+rat_sightings_fit <- lm(sighting_n ~ total_refuse + borough + year + month, data = rat_waste_month_merged)
+
+```
+
+
+
+```{r}
+rat_sightings_fit |> 
+  broom::glance()|> 
+  knitr::kable(digits = 3)
+```

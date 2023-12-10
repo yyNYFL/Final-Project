@@ -176,3 +176,72 @@ list(anova_result_organics, anova_result_refuse)
 The one-way ANOVA test was performed to assess the differences in organic waste tonnage among the boroughs. The ANOVA test revealed statistically significant differences in organic waste tonnage among the boroughs (F(4, 112) = 10.5, p < 0.05). 
 
 A one-way ANOVA test was conducted to examine the differences in refuse waste tonnage among the boroughs.The ANOVA test revealed statistically significant differences in refuse waste tonnage among the boroughs (F(4, 112) = 82.1, p < 0.001).
+
+
+### Linear Model 
+
+The rat sightings data set was cleaned to show the number of rat sightings for 2022 and 2023 by year, month, and borough. Then, the rat sightings data was merged with the waste tonnage data by year, month, and borough. 
+
+```{r, message=FALSE}
+
+rat_count_month <- rat_sightings %>% 
+  select(unique_key, month, year, borough, borough_id) %>% 
+  filter(year %in% c("2022", "2023"), borough != "Unspecified") %>%
+  group_by(borough, borough_id, year, month) %>% 
+  summarise(sighting_n = n_distinct(unique_key)) 
+
+
+rat_waste_month_merged = left_join(rat_count_month, waste_tonnage, by = c("borough_id", "month", "year", "borough"))%>% 
+  mutate(month=as.character(month),
+         year=as.character(year))
+
+```
+
+#### Linear Regression model for the number of rat sightings by total refuse, borough, year, and month.
+```{r}
+rat_sightings_fit <- lm(sighting_n ~ total_refuse + borough + year, data = rat_waste_month_merged)
+
+```
+
+y(Number of Rat Sightings) = Intercept + Total Waste (x~1~) + Borough (x~2~) + Year (x~3~)
+
+
+```{r}
+rat_sightings_fit |> 
+  broom::glance()|> 
+  knitr::kable(digits = 3)
+```
+
+
+With an R^2^ = 0.752, the independent variables (total waste, borough, year) in this model appear to explain about 75.2.2% of the variance in the dependent variable (number of rat sightings).
+
+
+```{r}
+rat_sightings_fit|> 
+  broom::tidy() |> 
+  select(term, estimate, std.error, statistic, p.value) |> 
+  mutate(term = str_replace(term, "^borough", "Borough: ")) |> 
+  mutate(term = str_replace(term, "^total_refuse", "Total Waste")) |> 
+  mutate(term = str_replace(term, "^year", "Year: ")) |> 
+  knitr::kable(digits = 6)
+```
+
+#### Interpretations:
+
+Total Waste
+- For every unit increase in total waste, the number of rat sightings increased by 0.005532, adjusting for borough, and year. At a 5% level of significance, there was a statistically significant relationship between the number of rat sightings and the total waste (_P_<0.001).
+
+
+Year
+-There was not a statistically significant relationship between the number of rat sightings and year at the 5% level of significance (_P_=0.57), adjusting for total waste and year. 
+
+
+Borough:
+
+Queens: The number of rat sightings in Queens was not significantly different from the numnber of rat sightings in the Bronx at the 5% level of significance (_P_=0.007), adjusting for total waste and year. 
+
+Manhattan: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
+
+Brooklyn: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
+
+
