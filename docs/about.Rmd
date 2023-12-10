@@ -18,7 +18,7 @@ Brianna is a 2nd year MPH in Epidemiology candidate pursuing a certificate in Ap
 
 ### Jessie
 
-Jessie is a 2nd year Epidemiology MPH candidate pursuing a certificate in Applied Biostatistics. 
+Jessie is a 2nd year Epidemiology MPH candidate pursuing a certificate in Applied Biostatistics. She thinks Simon runs this city.
 
 [Personal website](https://jessie-merrifield.github.io/Jessie-Merrifield2.github.io/) 
 
@@ -30,7 +30,7 @@ Laura is a 2nd year MPH candidate pursuing a certificate in Biostatistics. She t
 
 ### Navya
 
-Navya is a 2nd year Epidemiology MPH candidate pursuing a certificate in Applied Biostatistics.
+Navya is a 2nd year Epidemiology MPH candidate pursuing a certificate in Applied Biostatistics. She thinks the pigeons run this city.
 
 [Personal website](https://nk3037.github.io/nk3037_hw4.github.io/)
 
@@ -39,4 +39,11 @@ Navya is a 2nd year Epidemiology MPH candidate pursuing a certificate in Applied
 Youssra is a 2nd year Sociomedical Sciences MPH candidate pursuing a certificate in Applied Biostatistics. She harbors some sympathy for the rats.
 
 [Personal website](https://www.linkedin.com/in/youssra-yemmas-097a03207/)
+
+### Simon
+
+```{r, echo=FALSE, out.width="30%", fig.cap="", fig.align = 'center'}
+knitr::include_graphics("simon.png") 
+```
+
 
