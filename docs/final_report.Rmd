@@ -124,15 +124,12 @@ rat_sightings =
   )
 ```
 
-## Data cleaning and tidying 
-In order to analyze **the rat sightings** dataset, we used 2 data sources from NYC Open Data: 311 Rat Sightings and Monthly tonnage data from the NYC Department of Sanitation. The 311 Rat Sightings data was filtered to exclude observations from Staten Island since there was significantly less data from that borough. This decision aims to maintain consistency and reliability in our analysis by focusing on areas with more robust data. Since the data set contained data from more than 230,000 rat sighting reports from 2010 until present-day, we filtered it to only include data from 2019-2023. Variable `created_date` was separated to create three new variables to allow for analysis: `month`, `day`, `year`. These new variables and variables of interest to our analysis were kept: 
+### Waste Tonnage: Cleaning and Tidying
+The **monthly waste tonnage** dataset was filtered to have observations from 2022 and 2023 so that the effect of the trash pickup timings in early 2023 is evident. In addition, a new variable `total_organics` was created  as the sum of residential organic waste and school organic waste. The dataset was then grouped by `borough`, `month`, `year` and `borough_id` such that each row of the dataset had `total_organics` and `total_refuse` for each month and each borough in 2022 and 2023. Only unique variables of interest to our analysis from this dataset that were kept: 
 
- * `unique_key`: A unique identifier for each rat sighting report.
- * `location_type`: The type of location where the rat sighting was reported, providing context to the environment of these sightings.
- * `incident_zip`: The ZIP code of the reported sighting, allowing for geographical analysis.
- * `borough`: The borough where the sighting occurred, crucial for comparing sightings across different areas of the city.
- * `location`: Specific coordinates of the sighting, offering detailed geographical information in regards to latitude and longitude.
- * `borough_id`: This variable was created based on `borough` and assigns a numeric value to each of the 4 boroughs represented in our dataset. This was                  done to facilitate the dataset merging later on. 
+  * `borough_id`: Existing column that uniquely identifies each NYC borough
+  * `total_organics`: Sum of total tons of residential and school organics (food-scraps, food soiled paper and yard waste) in the borough.
+  * `total_refuse`: Sum of total tons of trash collected in residences and institutions by the NYC Department of Sanitation.
 
 ```{r data cleaning waste, message = FALSE}
 waste_tonnage = read_csv("data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
@@ -155,11 +152,22 @@ class(waste_tonnage$borough_id)
 
 ```
 
-The **monthly waste tonnage** dataset was filtered to have observations from 2022 and 2023 so that the effect of the trash pickup timings in early 2023 is evident. In addition, a new variable `total_organics` was created  as the sum of residential organic waste and school organic waste. The dataset was then grouped by `borough`, `month`, `year` and `borough_id` such that each row of the dataset had `total_organics` and `total_refuse` for each month and each borough in 2022 and 2023. Only unique variables of interest to our analysis from this dataset that were kept: 
+```{r}
+rat_sightings$borough_id <- as.factor(rat_sightings$borough_id)
+rat_sightings$month <- as.factor(rat_sightings$month)
+rat_sightings$year <- as.factor(rat_sightings$year)
+rat_sightings$borough <- as.factor(rat_sightings$borough)
 
-  * `borough_id`: Existing column that uniquely identifies each NYC borough
-  * `total_organics`: Sum of total tons of residential and school organics (food-scraps, food soiled paper and yard waste) in the borough.
-  * `total_refuse`: Sum of total tons of trash collected in residences and institutions by the NYC Department of Sanitation.
+waste_tonnage$borough_id <- as.factor(waste_tonnage$borough_id)
+waste_tonnage$month <- as.factor(waste_tonnage$month)
+waste_tonnage$year <- as.factor(waste_tonnage$year)
+waste_tonnage$borough <- as.factor(waste_tonnage$borough)
+
+rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
+rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(total_refuse)) #filtering out NAs in the dataset
+```
+
+
 
 ```{r merging, include=FALSE}
 rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
@@ -609,25 +617,47 @@ Similarly, the ANOVA test was conducted to examine the differences in refuse was
 The rat sightings data set was cleaned to show the number of rat sightings for 2022 and 2023 by year, month, and borough. Then, the rat sightings data was merged with the waste tonnage data by year, month, and borough. 
 
 ```{r, message=FALSE}
+waste_tonnage_2 = read_csv("data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
+  clean_names(case = "snake") %>%
+  mutate(date_split = strsplit(month, "/")) %>%
+  mutate(
+    year = as.integer(sapply(date_split, function(x) x[1])),
+    month = as.integer(sapply(date_split, function(x) x[2]))
+  ) %>%
+  filter(year %in% c(2022, 2023)) %>% 
+  mutate(total_organics = resorganicstons + schoolorganictons)
+
+waste_tonnage_2 = waste_tonnage_2 %>% 
+  group_by(borough, month, year, borough_id) %>% 
+  summarise(
+    total_organics = sum(total_organics, na.rm = TRUE),
+    total_refuse = sum(refusetonscollected, na.rm = TRUE)
+    )
+waste_tonnage_2$borough_id <- as.factor(waste_tonnage_2$borough_id)
+waste_tonnage_2$year <- as.factor(waste_tonnage_2$year)
+
 rat_count_month <- rat_sightings %>% 
   select(unique_key, month, year, borough, borough_id) %>% 
   filter(year %in% c("2022", "2023"), borough != "Unspecified") %>%
   group_by(borough, borough_id, year, month) %>% 
   summarise(sighting_n = n_distinct(unique_key)) 
-class(rat_count_month$borough_id)
 
-rat_waste_month_merged = left_join(rat_count_month, waste_tonnage, by = c("borough_id", "month", "year", "borough")) %>% 
-  mutate(month = as.character(month),
-         year = as.character(year))
+rat_count_month$borough_id <- as.factor(rat_count_month$borough_id)
+rat_count_month$month <- as.integer(rat_count_month$month)
+
+rat_waste_month_merged = left_join(rat_count_month, waste_tonnage_2, by = c("borough_id", "month", "year", "borough")) %>%
+  filter(!(month %in% c("1","2","3","12"))) 
+
 ```
 
 #### Linear Regression model for the number of rat sightings by total refuse, borough, year, and month.
+
 ```{r}
-rat_sightings_fit <- lm(sighting_n ~ total_refuse + borough + year, data = rat_waste_month_merged)
+rat_sightings_fit <- lm(sighting_n ~ total_refuse + borough + year + month, data = rat_waste_month_merged)
 
 ```
 
-y(Number of Rat Sightings) = Intercept + Total Waste (x~1~) + Borough (x~2~) + Year (x~3~)
+y(Number of Rat Sightings) = Intercept + Total Waste (x~1~) + Borough (x~2~) + Year (x~3~) + Month (x~4~)
 
 
 ```{r}
@@ -636,8 +666,7 @@ rat_sightings_fit |>
   knitr::kable(digits = 3)
 ```
 
-**With an R^2^ = 0.752, the independent variables (total waste, borough, year) in this model appear to explain about 75.2.2% of the variance in the dependent variable (number of rat sightings).**
-
+**With an R^2^ = 0.85, the independent variables (total waste, borough, year) in this model appear to explain about 85% of the variance in the dependent variable (number of rat sightings).**
 
 ```{r}
 rat_sightings_fit|> 
@@ -646,30 +675,35 @@ rat_sightings_fit|>
   mutate(term = str_replace(term, "^borough", "Borough: ")) |> 
   mutate(term = str_replace(term, "^total_refuse", "Total Waste")) |> 
   mutate(term = str_replace(term, "^year", "Year: ")) |> 
+  mutate(term = str_replace(term, "^month", "Month")) |> 
   knitr::kable(digits = 6)
 ```
 
 #### Interpretations:
 
 **Total Waste**
-For every unit increase in total waste, the number of rat sightings increased by 0.005532, adjusting for borough, and year. At a 5% level of significance, there was a statistically significant relationship between the number of rat sightings and the total waste (_P_<0.001).
+For every unit increase in total waste, the number of rat sightings increased by 0.003362, adjusting for borough, year, month. At a 5% level of significance, there was a statistically significant relationship between the number of rat sightings and the total waste (_P_=0.03).
 
 
 **Year**
-There was not a statistically significant relationship between the number of rat sightings and year at the 5% level of significance (_P_=0.57), adjusting for total waste and year. 
+While there was a decreased rate of rat sightings in 2023 compared to 2022, there was not a statistically significant relationship between the number of rat sightings and year at the 5% level of significance (_P_=0.38), adjusting for total waste, borough, and month.  
 
 
 **Borough**
 
-**Queens**: The number of rat sightings in Queens was not significantly different from the numnber of rat sightings in the Bronx at the 5% level of significance (_P_=0.007), adjusting for total waste and year. 
+**Queens**: The number of rat sightings in Queens was not significantly different from the numnber of rat sightings in the Bronx at the 5% level of significance (_P_=0.54), adjusting for total waste, year, and month. 
 
-**Manhattan**: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
+**Manhattan**: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste, year, and month. 
 
-**Brooklyn**: The number of rat sightings in Brooklyn was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
+**Brooklyn**: The number of rat sightings in Brooklyn was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste, year, month. 
+
+
+**Month**
+There was a statistically significant relationship between the number of rat sightings and month at the 5% level of significance (_P_=0.009), adjusting for total waste, year, and borough. This reflects the seasonality that was seen in earlier visualizations of rat sightings per month.  
 
 
 ## Discussion: 
 
-Our main finding in regard to the main question we had about the effectiveness of the new trash time rule instated on April 2023  was that it did not have a substantial or significant effect on the rat sightings.  Given the skepticism and pushback we were not expecting the rule to have much of an impact. However, it is worth it to disclaim that although we looked at a main confounder, trash, we could not account for other factors that may be confounding the effect of trash time on rat sightings. Moreover, we are constrained in the time period of the data(2019-2023) which may not capture the effect of the trash time and the major even that occured within the time period, the Covid-19 pandemic.  We did not expect the seasonal nature of trash tonnage and rat sightings. Although it does make sense given that both are related to human activity. The visualization all cemented the seasonal nature of rat sighting as well as the dominance Brooklyn in both trash tonnage and right sightings. Lastly, our analyses support what we saw in the visualizations which was that although the trash tonnage varied significantly by borough and post COVID the trash time rule did not have a significant impact on the rat sightings.
+Our main finding in regard to the main question we had about the effectiveness of the new trash time rule instated on April 2023 was that it did not have a substantial or significant effect on the rat sightings.  Given the skepticism and pushback we were not expecting the rule to have much of an impact. However, it is worth it to disclaim that although we looked at a main confounder, trash, we could not account for other factors that may be confounding the effect of trash time on rat sightings. Moreover, we are constrained in the time period of the data(2019-2023) which may not capture the effect of the trash time and the major even that occured within the time period, the Covid-19 pandemic.  We did not expect the seasonal nature of trash tonnage and rat sightings. Although it does make sense given that both are related to human activity. The visualization all cemented the seasonal nature of rat sighting as well as the dominance Brooklyn in both trash tonnage and right sightings. Lastly, our analyses support what we saw in the visualizations which was that although the trash tonnage varied significantly by borough and post COVID the trash time rule did not have a significant impact on the rat sightings.
 
 

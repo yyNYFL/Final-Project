@@ -177,26 +177,50 @@ Similarly, the ANOVA test was conducted to examine the differences in refuse was
 
 The rat sightings data set was cleaned to show the number of rat sightings for 2022 and 2023 by year, month, and borough. Then, the rat sightings data was merged with the waste tonnage data by year, month, and borough. 
 
+Months were limited to April through November for 2022 and 2023 to compare the active months of the 2023 trash time change initiative to the control of 2022. Months were included as a continuous covariate within the linear model to adjust for seasonal variations in rat sightings. 
+
 ```{r, message=FALSE}
+waste_tonnage_2 = read_csv("data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
+  clean_names(case = "snake") %>%
+  mutate(date_split = strsplit(month, "/")) %>%
+  mutate(
+    year = as.integer(sapply(date_split, function(x) x[1])),
+    month = as.integer(sapply(date_split, function(x) x[2]))
+  ) %>%
+  filter(year %in% c(2022, 2023)) %>% 
+  mutate(total_organics = resorganicstons + schoolorganictons)
+
+waste_tonnage_2 = waste_tonnage_2 %>% 
+  group_by(borough, month, year, borough_id) %>% 
+  summarise(
+    total_organics = sum(total_organics, na.rm = TRUE),
+    total_refuse = sum(refusetonscollected, na.rm = TRUE)
+    )
+waste_tonnage_2$borough_id <- as.factor(waste_tonnage_2$borough_id)
+waste_tonnage_2$year <- as.factor(waste_tonnage_2$year)
+
 rat_count_month <- rat_sightings %>% 
   select(unique_key, month, year, borough, borough_id) %>% 
   filter(year %in% c("2022", "2023"), borough != "Unspecified") %>%
   group_by(borough, borough_id, year, month) %>% 
   summarise(sighting_n = n_distinct(unique_key)) 
 
+rat_count_month$borough_id <- as.factor(rat_count_month$borough_id)
+rat_count_month$month <- as.integer(rat_count_month$month)
+rat_count_month$year <- as.factor(rat_count_month$year)
 
-rat_waste_month_merged = left_join(rat_count_month, waste_tonnage, by = c("borough_id", "month", "year", "borough"))%>% 
-  mutate(month=as.character(month),
-         year=as.character(year))
+rat_waste_month_merged = left_join(rat_count_month, waste_tonnage_2, by = c("borough_id", "month", "year", "borough")) %>%
+  filter(!(month %in% c("1","2","3","12"))) 
+
 ```
 
 #### Linear Regression model for the number of rat sightings by total refuse, borough, year, and month.
 ```{r}
-rat_sightings_fit <- lm(sighting_n ~ total_refuse + borough + year, data = rat_waste_month_merged)
+rat_sightings_fit <- lm(sighting_n ~ total_refuse + borough + year + month, data = rat_waste_month_merged)
 
 ```
 
-y(Number of Rat Sightings) = Intercept + Total Waste (x~1~) + Borough (x~2~) + Year (x~3~)
+y(Number of Rat Sightings) = Intercept + Total Waste (x~1~) + Borough (x~2~) + Year (x~3~) + Month (x~4~)
 
 
 ```{r}
@@ -205,7 +229,7 @@ rat_sightings_fit |>
   knitr::kable(digits = 3)
 ```
 
-**With an R^2^ = 0.752, the independent variables (total waste, borough, year) in this model appear to explain about 75.2.2% of the variance in the dependent variable (number of rat sightings).**
+**With an R^2^ = 0.85, the independent variables (total waste, borough, year) in this model appear to explain about 85% of the variance in the dependent variable (number of rat sightings).**
 
 
 ```{r}
@@ -215,25 +239,28 @@ rat_sightings_fit|>
   mutate(term = str_replace(term, "^borough", "Borough: ")) |> 
   mutate(term = str_replace(term, "^total_refuse", "Total Waste")) |> 
   mutate(term = str_replace(term, "^year", "Year: ")) |> 
+  mutate(term = str_replace(term, "^month", "Month")) |> 
   knitr::kable(digits = 6)
 ```
 
 #### Interpretations:
 
 **Total Waste**
-For every unit increase in total waste, the number of rat sightings increased by 0.005532, adjusting for borough, and year. At a 5% level of significance, there was a statistically significant relationship between the number of rat sightings and the total waste (_P_<0.001).
+For every unit increase in total waste, the number of rat sightings increased by 0.003362, adjusting for borough, year, month. At a 5% level of significance, there was a statistically significant relationship between the number of rat sightings and the total waste (_P_=0.03).
 
 
 **Year**
-There was not a statistically significant relationship between the number of rat sightings and year at the 5% level of significance (_P_=0.57), adjusting for total waste and year. 
+While there was a decreased rate of rat sightings in 2023 compared to 2022, there was not a statistically significant relationship between the number of rat sightings and year at the 5% level of significance (_P_=0.38), adjusting for total waste, borough, and month.  
 
 
 **Borough**
 
-**Queens**: The number of rat sightings in Queens was not significantly different from the numnber of rat sightings in the Bronx at the 5% level of significance (_P_=0.007), adjusting for total waste and year. 
+**Queens**: The number of rat sightings in Queens was not significantly different from the numnber of rat sightings in the Bronx at the 5% level of significance (_P_=0.54), adjusting for total waste, year, and month. 
 
-**Manhattan**: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
+**Manhattan**: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste, year, and month. 
 
-**Brooklyn**: The number of rat sightings in Brooklyn was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
+**Brooklyn**: The number of rat sightings in Brooklyn was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste, year, month. 
 
 
+**Month**
+There was a statistically significant relationship between the number of rat sightings and month at the 5% level of significance (_P_=0.009), adjusting for total waste, year, and borough. This reflects the seasonality that was seen in earlier visualizations of rat sightings per month. 
