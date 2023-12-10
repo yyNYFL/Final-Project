@@ -428,43 +428,38 @@ and by year are statistically different.</p>
 </div>
 <div id="waste-tonnage-analysis" class="section level3">
 <h3>Waste Tonnage Analysis</h3>
-<div id="anova-for-differences-in-waste-tonnage-across-boroughs"
-class="section level4">
-<h4>ANOVA for Differences in Waste Tonnage Across Boroughs</h4>
-<p>We conducted one-way ANOVA tests to compare the total organic and
-refuse waste tonnage across boroughs. Before interpreting the ANOVA
-results, we checked the assumptions of normality and homogeneity of
-variances.</p>
+<div id="anova-1" class="section level4">
+<h4>ANOVA</h4>
+<p>We conducted one-way ANOVA tests to compare the
+<code>total_organic</code> and <code>total_refuse</code> waste tonnage
+across boroughs. Before interpreting the ANOVA results, we checked the
+assumptions of normality and homogeneity of variances.</p>
 <ul>
-<li>Homogeneity of variances, the assumption that the variance within
+<li><p>Homogeneity of variances, the assumption that the variance within
 each group is the same, was checked using Bartlett’s test. A
 non-significant result (p &gt; 0.05) would suggest that this assumption
-holds true.</li>
-<li>For normality, we examined the residuals of our ANOVA model. The
+holds true.</p></li>
+<li><p>For normality, we examined the residuals of our ANOVA model. The
 residuals should follow a normal distribution for the ANOVA results to
 be valid. This was checked using Q-Q plots, where a close alignment of
-the residuals with the reference line would indicate normality.</li>
+the residuals with the reference line would indicate normality.</p></li>
 </ul>
-</div>
-<div id="anova-test-for-organic-and-refuse-waste-tonnage"
-class="section level4">
-<h4>ANOVA Test for Organic and Refuse Waste Tonnage</h4>
+<div id="assumption-checks" class="section level5">
+<h5>Assumption Checks</h5>
 <pre class="r"><code>#ANOVA tests for both organic and refuse 
 anova_model_organics &lt;- aov(total_organics ~ borough, data = waste_tonnage)
 anova_result_organics &lt;- broom::tidy(anova_model_organics)
 
 anova_model_refuse &lt;- aov(total_refuse ~ borough, data = waste_tonnage)
-anova_result_refuse &lt;- broom::tidy(anova_model_refuse)</code></pre>
-</div>
-<div id="assumption-checks" class="section level4">
-<h4>Assumption Checks</h4>
-<pre class="r"><code># Normality check with Q-Q plots
+anova_result_refuse &lt;- broom::tidy(anova_model_refuse)
+
+# Normality check with Q-Q plots
 qqnorm(anova_model_organics$residuals)
 qqline(anova_model_organics$residuals)</code></pre>
-<p><img src="sda_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p><img src="sda_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 <pre class="r"><code>qqnorm(anova_model_refuse$residuals)
 qqline(anova_model_refuse$residuals)</code></pre>
-<p><img src="sda_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+<p><img src="sda_files/figure-html/unnamed-chunk-2-2.png" width="672" /></p>
 <pre class="r"><code># Homogeneity of variances check with Bartlett&#39;s test
 bartlett_test_organics &lt;- bartlett.test(total_organics ~ borough, data = waste_tonnage)
 bartlett_test_refuse &lt;- bartlett.test(total_refuse ~ borough, data = waste_tonnage)
@@ -484,14 +479,25 @@ list(anova_result_organics, anova_result_refuse)</code></pre>
 ##   &lt;chr&gt;     &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
 ## 1 borough       4 37843283363. 9460820841.      82.1  2.19e-32
 ## 2 Residuals   112 12913077883.  115295338.      NA   NA</code></pre>
-<p>The one-way ANOVA test was performed to assess the differences in
-organic waste tonnage among the boroughs. The ANOVA test revealed
-statistically significant differences in organic waste tonnage among the
-boroughs (F(4, 112) = 10.5, p &lt; 0.05).</p>
-<p>A one-way ANOVA test was conducted to examine the differences in
-refuse waste tonnage among the boroughs.The ANOVA test revealed
+</div>
+<div id="test-for-organic-and-refuse-waste-tonnage"
+class="section level5">
+<h5>Test for Organic and Refuse Waste Tonnage</h5>
+<pre class="r"><code>#ANOVA tests for both organic and refuse 
+anova_model_organics &lt;- aov(total_organics ~ borough, data = waste_tonnage)
+anova_result_organics &lt;- broom::tidy(anova_model_organics)
+
+anova_model_refuse &lt;- aov(total_refuse ~ borough, data = waste_tonnage)
+anova_result_refuse &lt;- broom::tidy(anova_model_refuse)</code></pre>
+<p>The ANOVA test was performed to assess the differences in organic
+waste tonnage across the boroughs. This revealed statistically
+significant differences in organic waste tonnage among the boroughs
+(F(4, 112) = 10.5, p &lt; 0.05).</p>
+<p>Similarly, the ANOVA test was conducted to examine the differences in
+refuse waste tonnage across the boroughs.The ANOVA test revealed
 statistically significant differences in refuse waste tonnage among the
 boroughs (F(4, 112) = 82.1, p &lt; 0.001).</p>
+</div>
 </div>
 </div>
 <div id="linear-model" class="section level3">
@@ -569,9 +575,10 @@ refuse, borough, year, and month.</h4>
 </tr>
 </tbody>
 </table>
-<p>With an R<sup>2</sup> = 0.752, the independent variables (total
-waste, borough, year) in this model appear to explain about 75.2.2% of
-the variance in the dependent variable (number of rat sightings).</p>
+<p><strong>With an R<sup>2</sup> = 0.752, the independent variables
+(total waste, borough, year) in this model appear to explain about
+75.2.2% of the variance in the dependent variable (number of rat
+sightings).</strong></p>
 <pre class="r"><code>rat_sightings_fit|&gt; 
   broom::tidy() |&gt; 
   select(term, estimate, std.error, statistic, p.value) |&gt; 
@@ -637,27 +644,28 @@ the variance in the dependent variable (number of rat sightings).</p>
 </div>
 <div id="interpretations" class="section level4">
 <h4>Interpretations:</h4>
-<p>Total Waste - For every unit increase in total waste, the number of
-rat sightings increased by 0.005532, adjusting for borough, and year. At
-a 5% level of significance, there was a statistically significant
-relationship between the number of rat sightings and the total waste
-(<em>P</em>&lt;0.001).</p>
-<p>Year -There was not a statistically significant relationship between
-the number of rat sightings and year at the 5% level of significance
-(<em>P</em>=0.57), adjusting for total waste and year.</p>
-<p>Borough:</p>
-<p>Queens: The number of rat sightings in Queens was not significantly
-different from the numnber of rat sightings in the Bronx at the 5% level
-of significance (<em>P</em>=0.007), adjusting for total waste and
+<p><strong>Total Waste</strong> For every unit increase in total waste,
+the number of rat sightings increased by 0.005532, adjusting for
+borough, and year. At a 5% level of significance, there was a
+statistically significant relationship between the number of rat
+sightings and the total waste (<em>P</em>&lt;0.001).</p>
+<p><strong>Year</strong> There was not a statistically significant
+relationship between the number of rat sightings and year at the 5%
+level of significance (<em>P</em>=0.57), adjusting for total waste and
 year.</p>
-<p>Manhattan: The number of rat sightings in Manhattan was significantly
-different from the number of rat sightings in the Bronx at the 5% level
-of significance (<em>P</em>&lt;0.001), adjusting for total waste and
-year.</p>
-<p>Brooklyn: The number of rat sightings in Brooklyn was significantly
-different from the number of rat sightings in the Bronx at the 5% level
-of significance (<em>P</em>&lt;0.001), adjusting for total waste and
-year.</p>
+<p><strong>Borough</strong></p>
+<p><strong>Queens</strong>: The number of rat sightings in Queens was
+not significantly different from the numnber of rat sightings in the
+Bronx at the 5% level of significance (<em>P</em>=0.007), adjusting for
+total waste and year.</p>
+<p><strong>Manhattan</strong>: The number of rat sightings in Manhattan
+was significantly different from the number of rat sightings in the
+Bronx at the 5% level of significance (<em>P</em>&lt;0.001), adjusting
+for total waste and year.</p>
+<p><strong>Brooklyn</strong>: The number of rat sightings in Brooklyn
+was significantly different from the number of rat sightings in the
+Bronx at the 5% level of significance (<em>P</em>&lt;0.001), adjusting
+for total waste and year.</p>
 </div>
 </div>
 </div>

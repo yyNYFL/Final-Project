@@ -106,7 +106,6 @@ plot(anova_result_no_interaction$model)
 
 The ANOVA test for the interaction model, which met all of the assumptions of an ANOVA test, results in a p-value <0.001 at 5% level of significance. We can conclude that the average sightings by borough and by year are statistically different. 
 
-
 ### Waste Tonnage Analysis
 
 ```{r data cleaning, include=FALSE}
@@ -137,6 +136,13 @@ We conducted one-way ANOVA tests to compare the `total_organic` and `total_refus
 
 ##### Assumption Checks
 ```{r}
+#ANOVA tests for both organic and refuse 
+anova_model_organics <- aov(total_organics ~ borough, data = waste_tonnage)
+anova_result_organics <- broom::tidy(anova_model_organics)
+
+anova_model_refuse <- aov(total_refuse ~ borough, data = waste_tonnage)
+anova_result_refuse <- broom::tidy(anova_model_refuse)
+
 # Normality check with Q-Q plots
 qqnorm(anova_model_organics$residuals)
 qqline(anova_model_organics$residuals)
@@ -215,11 +221,11 @@ rat_sightings_fit|>
 #### Interpretations:
 
 **Total Waste**
-- For every unit increase in total waste, the number of rat sightings increased by 0.005532, adjusting for borough, and year. At a 5% level of significance, there was a statistically significant relationship between the number of rat sightings and the total waste (_P_<0.001).
+For every unit increase in total waste, the number of rat sightings increased by 0.005532, adjusting for borough, and year. At a 5% level of significance, there was a statistically significant relationship between the number of rat sightings and the total waste (_P_<0.001).
 
 
 **Year**
--There was not a statistically significant relationship between the number of rat sightings and year at the 5% level of significance (_P_=0.57), adjusting for total waste and year. 
+There was not a statistically significant relationship between the number of rat sightings and year at the 5% level of significance (_P_=0.57), adjusting for total waste and year. 
 
 
 **Borough**
