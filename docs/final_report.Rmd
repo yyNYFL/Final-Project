@@ -452,7 +452,7 @@ ggplotly(rats_time_series_plot)
 
 **Figure 7.** This figure further cements the seasonal nature of the rat sightings and does a better job at depicting on the same scale how much the rat sightings jumped following the pandemic. We can also see from this plot that the *trash time rule that occured on 04/01/2023 did not make a noticeable impact on the rat sightings and we are assuming by proxy on the rat population.*
 
-### Figure 8: Exploring the forecasting of rat sightings in Brooklyn and the impact of the April 1st Trash Time Change
+#### Figure 8: Exploring the forecasting of rat sightings in Brooklyn and the impact of the April 1st Trash Time Change
 
 ```{r}
 borough_data <- rat_sightings_tibble %>%
@@ -497,11 +497,12 @@ print(rats_rule_impact_plot)
 **Figure 8.** Brooklyn has the highest average of rat sightings. This time series decomposition plot with forecasting sheds some light into how the rat sightings would have looked if the trash time rule was not implemented.
 
 
-### Rat Sightings Analysis
+## Statistical Analysis
 
-#### ANOVA
+### Rat Sightings 
 
 We can see that there are differences in the average rat sightings across years and boroughs. Through ANOVA, we can see if these differences are statistically significant. 
+
 ```{r}
 rat_sightings_agg = rat_sightings |> 
   group_by(year, borough, month) |> 
@@ -524,7 +525,8 @@ We want to check the assumptions for the ANOVA tests ran above. There are three 
 
 We also checked the normality of residuals in the below code. From the Normal Q-Q plot of both model residuals, the points are quite close to the fitted diagonal line. We also conducted Shapiro-Wilk tests for normality of residuals for both models and with a null hypothesis that the residuals follow a normal distribution and an alternative hypothesis that the residuals does not follow a normal distribution. The p-value for the no interaction model is 0.2694 and the p-value for the interaction model is 0.03883. At a 5% level of significance, we can conclude that the residuals of the interaction model follow a normal distribution but the residuals for the no interaction model do not follow a normal distribution. 
 
-##### Checking assumptions of ANOVA
+#### ANOVA and Assumption Check
+
 ```{r}
 # Extract residuals for the interaction model
 residuals_interaction <- residuals(anova_result)
@@ -557,7 +559,7 @@ plot(anova_result_no_interaction$model)
 ```
 The ANOVA test for the interaction model, which met all of the assumptions of an ANOVA test, results in a p-value <0.001 at 5% level of significance. We can conclude that the average sightings by borough and by year are statistically different. 
 
-### Waste Tonnage Analysis
+### Waste Tonnage 
 
 ```{r data cleaning, include=FALSE}
 #data import/clean to be able to run tests
@@ -577,15 +579,13 @@ waste_tonnage = read_csv("data/DSNY_Monthly_Tonnage_Data_20231202.csv") |>
   )
 ```
 
-#### ANOVA
-
 We conducted one-way ANOVA tests to compare the `total_organic` and `total_refuse` waste tonnage across boroughs. Before interpreting the ANOVA results, we checked the assumptions of normality and homogeneity of variances.
 
 * Homogeneity of variances, the assumption that the variance within each group is the same, was checked using Bartlett’s test. A non-significant result (p > 0.05) would suggest that this assumption holds true.
 
 * For normality, we examined the residuals of our ANOVA model. The residuals should follow a normal distribution for the ANOVA results to be valid. This was checked using Q-Q plots, where a close alignment of the residuals with the reference line would indicate normality.
 
-##### ANOVA Tests and Assumption Checks
+#### ANOVA and Assumption Check
 ```{r}
 #ANOVA tests for both organic and refuse 
 anova_model_organics <- aov(total_organics ~ borough, data = waste_tonnage)
@@ -614,7 +614,7 @@ The ANOVA test was performed to assess the differences in organic waste tonnage 
 Similarly, the ANOVA test was conducted to examine the differences in refuse waste tonnage across the boroughs.The ANOVA test revealed statistically significant differences in refuse waste tonnage among the boroughs (F(4, 112) = 82.1, p < 0.001).
 
 
-### Linear Model 
+### Linear Models 
 
 The rat sightings data set was cleaned to show the number of rat sightings for 2022 and 2023 by year, month, and borough. Then, the rat sightings data was merged with the waste tonnage data by year, month, and borough. 
 
@@ -656,11 +656,9 @@ rat_waste_month_merged = left_join(rat_count_month, waste_tonnage_2, by = c("bor
 
 ```{r}
 rat_sightings_fit <- lm(sighting_n ~ total_refuse + borough + year + month, data = rat_waste_month_merged)
-
 ```
 
-y(Number of Rat Sightings) = Intercept + Total Waste (x~1~) + Borough (x~2~) + Year (x~3~) + Month (x~4~)
-
+**y(Number of Rat Sightings) = Intercept + Total Waste (x~1~) + Borough (x~2~) + Year (x~3~) + Month (x~4~)**
 
 ```{r}
 rat_sightings_fit |> 
@@ -704,8 +702,8 @@ While there was a decreased rate of rat sightings in 2023 compared to 2022, ther
 There was a statistically significant relationship between the number of rat sightings and month at the 5% level of significance (_P_=0.009), adjusting for total waste, year, and borough. This reflects the seasonality that was seen in earlier visualizations of rat sightings per month.  
 
 
-## Discussion: 
+## Discussion 
 
-Our main finding in regard to the main question we had about the effectiveness of the new trash time rule instated on April 2023 was that it did not have a substantial or significant effect on the rat sightings.  Given the skepticism and pushback we were not expecting the rule to have much of an impact. However, it is worth it to disclaim that although we looked at a main confounder, trash, we could not account for other factors that may be confounding the effect of trash time on rat sightings. Moreover, we are constrained in the time period of the data(2019-2023) which may not capture the effect of the trash time and the major even that occured within the time period, the Covid-19 pandemic.  We did not expect the seasonal nature of trash tonnage and rat sightings. Although it does make sense given that both are related to human activity. The visualization all cemented the seasonal nature of rat sighting as well as the dominance Brooklyn in both trash tonnage and right sightings. Lastly, our analyses support what we saw in the visualizations which was that although the trash tonnage varied significantly by borough and post COVID the trash time rule did not have a significant impact on the rat sightings.
+Our main finding in regard to the main question we had about the effectiveness of the new trash time rule instated on April 2023 was that it did not have a substantial or significant effect on the rat sightings.  Given the skepticism and pushback we were not expecting the rule to have much of an impact. However, it is worth it to disclaim that although we looked at a main confounder, trash, we could not account for other factors that may be confounding the effect of trash time on rat sightings. Moreover, we are constrained in the time period of the data(2019-2023) which may not capture the effect of the trash time and the major even that occured within the time period, the Covid-19 pandemic.  We did not expect the seasonal nature of trash tonnage and rat sightings. Although it does make sense given that both are related to human activity. The visualization all cemented the seasonal nature of rat sighting as well as the dominance Brooklyn in both trash tonnage and right sightings. Lastly, our analyses support what we saw in the visualizations which was that **although the trash tonnage varied significantly by borough and post-COVID, the trash time rule did not have a significant impact on the rat sightings.**
 
 
