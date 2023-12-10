@@ -122,11 +122,9 @@ rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(to
 
 We used the `left_join` function from the `dplyr` package to merge the rat sightings data with the waste tonnage data. We chose to merge based on `borough_id`, `month`, `year`, and `borough`. This approach ensures that each rat sighting record is aligned with the corresponding waste tonnage data based on both geographical (borough) and temporal (month and year) factors. After merging, we applied a filtering step to remove rows with missing values in the `total_organics` and `total_refuse` columns. 
 
-## Visualizations for waste tonnage data
+## Summary statistics
 
-First, we did exploratory analysis via different visualizations for waste tonnage data. 
-
-```{r}
+```{r, message=FALSE}
 print(names(rat_waste_merged))
 
 rat_waste_merged %>%
@@ -147,6 +145,14 @@ rat_waste_merged %>%
     filename = "table_1_new.png"
   )
 ```
+
+```{r, echo=FALSE, out.width="30%", fig.cap="", fig.align = 'center'}
+knitr::include_graphics("table_1.jpg") 
+```
+
+## Visualizations for waste tonnage data
+
+First, we did exploratory analysis via different visualizations for waste tonnage data. 
 
 
 ### Figure 1: Trash Tonnage by Borough, 2022 - 2023
@@ -232,7 +238,43 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
 
 Then, we did exploratory analysis for the rat sightings data. 
 
-### Table 1. Rat sightings by zip codes
+### Summary statistics
+
+```{r}
+print(names(rat_waste_merged))
+
+rat_waste_merged %>%
+  select(borough, location_type, total_organics, total_refuse) %>%
+  tbl_summary(type = list(borough ~ "categorical", 
+                          location_type ~ "categorical",
+                          total_organics ~ "continuous", 
+                          total_refuse ~ "continuous"), 
+              statistic = list(all_continuous() ~ "{mean} ({sd})"), 
+              digits = all_continuous() ~ 1,
+              label = list(c(borough) ~ "Borough",
+                           c(location_type) ~ "Location Type",
+                           c(total_organics) ~ "Total Organic Waste (Tonnes)",
+                           c(total_refuse) ~ "Total Waste (Tonnes)")) %>%
+  bold_labels()  %>%
+  as_gt()            # convert to gt table
+```
+
+### Table 1. Rat sightings by location type by year
+
+```{r}
+rats_location_type = rat_sightings %>% 
+  janitor::clean_names() %>% 
+  select(location_type, year, unique_key) %>% 
+  group_by(location_type, year) %>% 
+  count() %>% 
+  summarize(avg_rat_sightings = mean(n)) %>% 
+  ungroup %>% 
+  spread(key = year, value = avg_rat_sightings)
+
+knitr::kable(rats_location_type)
+```
+
+### Table 2. Rat sightings by zip codes
 ```{r}
 top_zip_codes <- rat_sightings %>%
   group_by(incident_zip) %>%
@@ -242,9 +284,9 @@ top_zip_codes <- rat_sightings %>%
 kable(top_zip_codes)
 ```
 
-**Table 1.** The zip codes with the most 311 rat sightings are in the above kable and are associated in order with the areas of the Upper West Side, Bedford- Stuyvesant, Prospect Heights, Bushwick, Flatbush, and Ridgewood. It is interesting that Brooklyn had more zip codes in top six zipcodes of rat sightings but a Manhattan zipcode had the most rat sightings.
+**Table 2.** The zip codes with the most 311 rat sightings are in the above kable and are associated in order with the areas of the Upper West Side, Bedford- Stuyvesant, Prospect Heights, Bushwick, Flatbush, and Ridgewood. It is interesting that Brooklyn had more zip codes in top six zipcodes of rat sightings but a Manhattan zipcode had the most rat sightings.
 
-### Table 2. Rat sightings by month each year 
+### Table 3. Rat sightings by month each year 
 
 ```{r, message=FALSE}
 # Month with the highest number of rat sightings in each of the five years
@@ -257,7 +299,7 @@ top_month_each_year <- rat_sightings %>%
 kable(top_month_each_year)
 ```
 
-**Table 2.**The month with the most rat sightings varied each year so you cannot necesarily see the seasonality of the data just by analyzing the data but when ploting the data by borough, the seasonality is much more apparent.
+**Table 3.**The month with the most rat sightings varied each year so you cannot necesarily see the seasonality of the data just by analyzing the data but when ploting the data by borough, the seasonality is much more apparent.
 
 We were very curious to see how the rat sightings differed across the time period we selected and across boroughs. These sightings are obviously not a measure of actual rat population given that they are based on 311 calls people make but this data is the closest thing we have to a proxy of actual rat populations. Given that, I think a lot of us were biased towards thinking Manhattan would have the most rat sightings and thus by proxy the largest population of rats just based on the density of buildings, people and restaurants. However, following the analysis of trash tonnage it is less suprising that Brooklyn actually leads in rat sightings. 
 
@@ -296,7 +338,6 @@ rat_sightings_agg = rat_sightings |>
 
 We can see from the kable output that there was quite a substantial jump in rat sightings from 2020 to 2021 in all of the boroughs. This may be another COVID phenomena as restaurants shifted to more outdoor dining which deposited more food waste and other things that attract rats onto the streets during the pandemic and after the pandemic [when indoor dining became less feasible](https://apnews.com/article/rats-new-york-9dc65afa66a3535cba01b1ea866973a1#.) Interestingly, Brooklyn seems to have the highest average of rat sightings amongst the 5 Boros for every year and on the opposite end Queens seems to have the lowest rat sightings pre pandemic but then this year Bronx was the boro with the least rat sightings.
 
-
 ### Figure 5: Rat Sightings Over Time by Borough and Year
 ```{r, message=FALSE}
 rat_sightings_agg <- rat_sightings_agg %>%
@@ -322,7 +363,7 @@ ggplotly(rats_yr_plot)
 ```
 **Figure 5.** This plot illustrates the seasonal nature of the rat sightings. we can see an approxsumately normal curve of rat sightings across all boros and years. Across all of the years which are distinguished by the colors the peak of each curve occurs around the spring months of May, June, and July which may have something to do with more people being out and about during those months to encounter the rats. Interestingly, the Bronx experienced its highest number of sightings in 2021 whereas the other three boroughs experienced theirs in 2022.
 
-### Figure 6: Rat Sightings 
+### Figure 6: Rat Sightings by Borough and Year (Bar Graph)
 ```{r}
  bar_plot <- ggplot(rat_sightings_agg, aes(x = year, y = count)) +
   geom_bar(stat = "identity", position = "dodge", fill = "skyblue") +
