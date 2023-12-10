@@ -303,13 +303,11 @@ $(document).ready(function () {
 <h2 class="tabset">Statistical Data Analysis</h2>
 <div id="rat-sightings-analysis" class="section level3">
 <h3>Rat Sightings Analysis</h3>
-<div id="anova." class="section level4">
-<h4>ANOVA.</h4>
-<p>Analysis of variance of the average rat sightings we saw in the
-‘rat_boro’ kable output. We can see that there are differences in the
-average rat sightings across years and boros so we wanted to explore if
-thiese diferences were statistically significant through a ANOVA
-test.</p>
+<div id="anova" class="section level4">
+<h4>ANOVA</h4>
+<p>We can see that there are differences in the average rat sightings
+across years and boroughs. Through ANOVA, we can see if these
+differences are statistically significant.</p>
 <pre class="r"><code>rat_sightings = 
   read_csv (&quot;./data/Rat_Sightings.csv&quot;) |&gt;
   janitor::clean_names(case = &quot;snake&quot;) |&gt;
@@ -354,27 +352,32 @@ broom::tidy(anova_result_no_interaction)</code></pre>
 ## 1 factor(year)        4 2185688.  546422.      30.2  3.72e-20
 ## 2 factor(borough)     3 6927195. 2309065.     128.   1.63e-48
 ## 3 Residuals         228 4128300.   18107.      NA   NA</code></pre>
-<p>We want to check the assumptions for the ANOVA models ran above.
-There are three assumptions that should be met when computing an
-ANOVA:</p>
-<p>-The response variable must be quantitative- This is met since the
-response variable of count of rat sightings is quantitative. -The
-variance between the groups of average rat sightings by borough and by
-year should be similar and in this case they are. -Observations should
-be independent of one another- which we are assuming is satisfied. -The
-distribution of values within each group of rat sightings by borough is
-normally distributed which we can see in some of the plots. We can also
-check the normality of residuals in the below code. From the Normal Q-Q
-plot of both model residuals the points are quite close to the fitted
-diagonal line. We also conducted Shapiro-Wilk tests for normality of
-residuals for both models and with a null hypothesis that the residuals
-follow a normal distribution and an alternative hypothesis that the
-residuals does not follow a normal distribution. The p-value for the no
-interaction model is 0.2694 and the p-value for the interaction model is
-0.03883. At a 5% level of significance we can conclude the residuals of
-the interaction model follow a normal distribution but the residuals for
-the no interaction model do not follow a normal distribution.
-###Checking assumptions of ANOVA</p>
+<p>We want to check the assumptions for the ANOVA tests ran above. There
+are three assumptions that should be met when computing an ANOVA:</p>
+<ul>
+<li>The response variable must be quantitative: This is met since the
+response variable of count of rat sightings is quantitative.</li>
+<li>The variance between the groups of average rat sightings by borough
+and by year should be similar: This is met.</li>
+<li>Observations should be independent of one another: This is met based
+on nature of dataset.</li>
+<li>The distribution of values within each group of rat sightings by
+borough is normally distributed. This is met, apparent in the
+plots.</li>
+</ul>
+<p>We also checked the normality of residuals in the below code. From
+the Normal Q-Q plot of both model residuals, the points are quite close
+to the fitted diagonal line. We also conducted Shapiro-Wilk tests for
+normality of residuals for both models and with a null hypothesis that
+the residuals follow a normal distribution and an alternative hypothesis
+that the residuals does not follow a normal distribution. The p-value
+for the no interaction model is 0.2694 and the p-value for the
+interaction model is 0.03883. At a 5% level of significance, we can
+conclude that the residuals of the interaction model follow a normal
+distribution but the residuals for the no interaction model do not
+follow a normal distribution.</p>
+<div id="checking-assumptions-of-anova" class="section level5">
+<h5>Checking assumptions of ANOVA</h5>
 <pre class="r"><code># Extract residuals for the interaction model
 residuals_interaction &lt;- residuals(anova_result)
 
@@ -416,25 +419,15 @@ plot(anova_result$model)
 # Check homoscedasticity for the model without interaction
 plot(anova_result_no_interaction$model)</code></pre>
 <p><img src="sda_files/figure-html/unnamed-chunk-1-3.png" width="672" /></p>
-<p>From the ANOVA test for the model with the interaction which is the
-model that checked all of the assumptions of an ANOVA test above we can
-see from the p-value of being &lt;0.001 at 5% level of significance we
-can reject the null hypotheses and conclude that at least one of the
-average rat sightings by borough and by year are statistically
-different.</p>
+<p>The ANOVA test for the interaction model, which met all of the
+assumptions of an ANOVA test, results in a p-value &lt;0.001 at 5% level
+of significance. We can conclude that the average sightings by borough
+and by year are statistically different.</p>
+</div>
 </div>
 </div>
 <div id="waste-tonnage-analysis" class="section level3">
 <h3>Waste Tonnage Analysis</h3>
-<p>The dataset was cleaned to ensure accurate and relevant data for
-analysis. We performed the following steps:</p>
-<ul>
-<li>Standardized column names</li>
-<li>Parsed and converted date information</li>
-<li>Filtered data for the years 2022 and 2023</li>
-<li>Calculated total organics by summing relevant columns</li>
-<li>Aggregated waste tonnage by borough and date</li>
-</ul>
 <div id="anova-for-differences-in-waste-tonnage-across-boroughs"
 class="section level4">
 <h4>ANOVA for Differences in Waste Tonnage Across Boroughs</h4>
@@ -453,14 +446,14 @@ be valid. This was checked using Q-Q plots, where a close alignment of
 the residuals with the reference line would indicate normality.</li>
 </ul>
 </div>
-<div id="anova-test-for-organic-waste-tonnage" class="section level4">
-<h4>ANOVA Test for Organic Waste Tonnage</h4>
-<pre class="r"><code>anova_model_organics &lt;- aov(total_organics ~ borough, data = waste_tonnage)
-anova_result_organics &lt;- broom::tidy(anova_model_organics)</code></pre>
-</div>
-<div id="anova-test-for-refuse-waste-tonnage" class="section level4">
-<h4>ANOVA Test for Refuse Waste Tonnage</h4>
-<pre class="r"><code>anova_model_refuse &lt;- aov(total_refuse ~ borough, data = waste_tonnage)
+<div id="anova-test-for-organic-and-refuse-waste-tonnage"
+class="section level4">
+<h4>ANOVA Test for Organic and Refuse Waste Tonnage</h4>
+<pre class="r"><code>#ANOVA tests for both organic and refuse 
+anova_model_organics &lt;- aov(total_organics ~ borough, data = waste_tonnage)
+anova_result_organics &lt;- broom::tidy(anova_model_organics)
+
+anova_model_refuse &lt;- aov(total_refuse ~ borough, data = waste_tonnage)
 anova_result_refuse &lt;- broom::tidy(anova_model_refuse)</code></pre>
 </div>
 <div id="assumption-checks" class="section level4">
@@ -468,14 +461,15 @@ anova_result_refuse &lt;- broom::tidy(anova_model_refuse)</code></pre>
 <pre class="r"><code># Normality check with Q-Q plots
 qqnorm(anova_model_organics$residuals)
 qqline(anova_model_organics$residuals)</code></pre>
-<p><img src="sda_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="sda_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 <pre class="r"><code>qqnorm(anova_model_refuse$residuals)
 qqline(anova_model_refuse$residuals)</code></pre>
-<p><img src="sda_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+<p><img src="sda_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
 <pre class="r"><code># Homogeneity of variances check with Bartlett&#39;s test
 bartlett_test_organics &lt;- bartlett.test(total_organics ~ borough, data = waste_tonnage)
-bartlett_test_refuse &lt;- bartlett.test(total_refuse ~ borough, data = waste_tonnage)</code></pre>
-<pre class="r"><code># Output ANOVA results
+bartlett_test_refuse &lt;- bartlett.test(total_refuse ~ borough, data = waste_tonnage)
+
+# Output ANOVA results
 list(anova_result_organics, anova_result_refuse)</code></pre>
 <pre><code>## [[1]]
 ## # A tibble: 2 × 6
@@ -660,7 +654,7 @@ year.</p>
 different from the number of rat sightings in the Bronx at the 5% level
 of significance (<em>P</em>&lt;0.001), adjusting for total waste and
 year.</p>
-<p>Brooklyn: The number of rat sightings in Manhattan was significantly
+<p>Brooklyn: The number of rat sightings in Brooklyn was significantly
 different from the number of rat sightings in the Bronx at the 5% level
 of significance (<em>P</em>&lt;0.001), adjusting for total waste and
 year.</p>

@@ -1,16 +1,17 @@
 ---
-title: <div align="center"> "Exploratory Data Analysis"
+title: <div align="center"> Exploratory Data Analysis
 output: 
   html_document:
     code_folding: show
 ---
-```{r setup, include=FALSE}
+```{r setup, include=FALSE,  message = FALSE}
 library(tidyverse)
 library(readr)
 library(janitor)
 library(dplyr)
 library(ggplot2)
 library(stats)
+library(forecast)
 library(stats)
 library(tidyr)
 library(readxl)
@@ -32,7 +33,6 @@ library(dbplyr)
 library(stats)
 library(plotly)
 library(ggridges)
-library(forecast)
 library(patchwork)
 library(dplyr)
 library(flexdashboard)
@@ -117,10 +117,11 @@ waste_tonnage = waste_tonnage %>%
     )
 ```
 
-The **monthly waste tonnage** dataset was filtered to have observations from 2022 and 2023 so that the effect of the trash pickup timings in early 2023 is evident. In addition, a new variable `total_organics` was created  as the sum of residential organic waste and school organic waste. The dataset was then grouped by `borough`, `month`, `year` and `borough_id` such that each row of the dataset had `total_organics` and `total_refuse` for each month and each borough in 2022 and 2023. Only variables of interest to our analysis were kept: 
-  * 
-  * 
-  * 
+The **monthly waste tonnage** dataset was filtered to have observations from 2022 and 2023 so that the effect of the trash pickup timings in early 2023 is evident. In addition, a new variable `total_organics` was created  as the sum of residential organic waste and school organic waste. The dataset was then grouped by `borough`, `month`, `year` and `borough_id` such that each row of the dataset had `total_organics` and `total_refuse` for each month and each borough in 2022 and 2023. Only unique variables of interest to our analysis from this dataset that were kept: 
+
+  * `borough_id`: Existing column that uniquely identifies each NYC borough
+  * `total_organics`: Sum of total tons of residential and school organics (food-scraps, food soiled paper and yard waste) in the borough.
+  * `total_refuse`: Sum of total tons of trash collected in residences and institutions by the NYC Department of Sanitation.
 
 ```{r merging, include=FALSE}
 rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
@@ -129,7 +130,10 @@ rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(to
 
 We used the `left_join` function from the `dplyr` package to merge the rat sightings data with the waste tonnage data. We chose to merge based on `borough_id`, `month`, `year`, and `borough`. This approach ensures that each rat sighting record is aligned with the corresponding waste tonnage data based on both geographical (borough) and temporal (month and year) factors. After merging, we applied a filtering step to remove rows with missing values in the `total_organics` and `total_refuse` columns. 
 
-## Visualizations 
+## Visualizations for waste tonnage data
+
+First, we did exploratory analysis via different visualizations for waste tonnage data. 
+
 ### Figure 1: Trash Tonnage by Borough, 2022 - 2023
 ```{r figure 1, message = FALSE}
 waste_tonnage_by_borough = rat_waste_filtered |> 
@@ -209,7 +213,11 @@ ggplot(total_tonnage_by_borough_year_month, aes(x = year_month, y = total_tonnag
 
 **Figure 4.** This multi-line chart tracks the volume of trash, both organics and refuse, collected over time across different boroughs of New York City from early 2022 to the end of 2023. In this visualization, Brooklyn is depicted with a prominent peak, suggesting a significant increase in trash tonnage in summer months, potentially indicative of seasonal variations or specific events impacting waste production. The other boroughs also show variability, with Queens and Manhattan following similar trajectories and the Bronx displaying the least amount of trash tonnage overall. 
 
-### What are the zip_codes with the highest number of rat sightings?
+## Visualizations for rat sightings data
+
+Then, we did exploratory analysis for the rat sightings data. 
+
+### Table 1. Rat sightings by zip codes
 ```{r}
 top_zip_codes <- rat_sightings %>%
   group_by(incident_zip) %>%
@@ -217,14 +225,13 @@ top_zip_codes <- rat_sightings %>%
   arrange(desc(total_sightings)) %>%
   head()
 kable(top_zip_codes)
-
 ```
 
-The zip codes with the most 311 rat sightings are in the above kable and are associated in order with the areas of the Upper West Side, Bedford- Stuyvesant, Prospect Heights, Bushwick, Flatbush, and Ridgewood. It is interesting that Brooklyn had more zip codes in top six zipcodes of rat sightings but a Manhattan zipcode had the most rat sightings.
+**Table 1.** The zip codes with the most 311 rat sightings are in the above kable and are associated in order with the areas of the Upper West Side, Bedford- Stuyvesant, Prospect Heights, Bushwick, Flatbush, and Ridgewood. It is interesting that Brooklyn had more zip codes in top six zipcodes of rat sightings but a Manhattan zipcode had the most rat sightings.
 
-### What month had the highest number of rat sightings in each year?
+### Table 2. Rat sightings by month each year 
 
-```{r}
+```{r, message=FALSE}
 # Month with the highest number of rat sightings in each of the five years
 top_month_each_year <- rat_sightings %>%
   group_by(year, month) %>%
@@ -235,12 +242,11 @@ top_month_each_year <- rat_sightings %>%
 kable(top_month_each_year)
 ```
 
-The month with the most rat sightings varied each year so you cannot necesarily see the seasonality of the data just be analyzing the data but when ploting the data by borough the seasonality is much more apparent.
+**Table 2.**The month with the most rat sightings varied each year so you cannot necesarily see the seasonality of the data just by analyzing the data but when ploting the data by borough, the seasonality is much more apparent.
 
-### Switching Focus to Rat Sightings
 We were very curious to see how the rat sightings differed across the time period we selected and across boroughs. These sightings are obviously not a measure of actual rat population given that they are based on 311 calls people make but this data is the closest thing we have to a proxy of actual rat populations. Given that, I think a lot of us were biased towards thinking Manhattan would have the most rat sightings and thus by proxy the largest population of rats just based on the density of buildings, people and restaurants. However, following the analysis of trash tonnage it is less suprising that Brooklyn actually leads in rat sightings. 
 
-```{r}
+```{r, message=FALSE}
 summary(rat_sightings)
 variable_types <- sapply(rat_sightings, class)
 print(variable_types)
@@ -266,20 +272,18 @@ rats_boro = rat_sightings %>%
 knitr::kable(rats_boro)
 ```
 
-### Formatting the data in a way that makes plotting easier
-```{r}
-
+```{r, message=FALSE}
 rat_sightings_agg = rat_sightings |> 
   group_by(year, borough, month) |> 
   filter(borough != "Unspecified") %>% 
   summarise(count = n())
 ```
 
-We can see from the kable output that there was quite a substantial jump in rat sightings from 2020 to 2021 in all of the boroughs. This may be another COVID phenomena as restaurants shifted to more outdoor dining which deposited more food waste and other things that attract rats onto the streets during the pandemic and after the pandemic when indoor dining became less feasible. https://apnews.com/article/rats-new-york-9dc65afa66a3535cba01b1ea866973a1#. Interestingly, Brooklyn seems to have the highest average of rat sightings amongst the 5 Boros for every year and on the opposite end Queens seems to have the lowest rat sightings pre pandemic but then this year Bronx was the boro with the least rat sightings.
+We can see from the kable output that there was quite a substantial jump in rat sightings from 2020 to 2021 in all of the boroughs. This may be another COVID phenomena as restaurants shifted to more outdoor dining which deposited more food waste and other things that attract rats onto the streets during the pandemic and after the pandemic [when indoor dining became less feasible](https://apnews.com/article/rats-new-york-9dc65afa66a3535cba01b1ea866973a1#.) Interestingly, Brooklyn seems to have the highest average of rat sightings amongst the 5 Boros for every year and on the opposite end Queens seems to have the lowest rat sightings pre pandemic but then this year Bronx was the boro with the least rat sightings.
 
 
 ### Figure 5: Rat Sightings Over Time by Borough and Year
-```{r}
+```{r, message=FALSE}
 rat_sightings_agg <- rat_sightings_agg %>%
   mutate(common_date = paste0(year, "-", month),
          common_date = lubridate::ym(common_date))
@@ -302,6 +306,7 @@ rats_yr_plot <- rat_sightings_agg %>%
 ggplotly(rats_yr_plot)
 ```
 **Figure 5.** This plot illustrates the seasonal nature of the rat sightings. we can see an approxsumately normal curve of rat sightings across all boros and years. Across all of the years which are distinguished by the colors the peak of each curve occurs around the spring months of May, June, and July which may have something to do with more people being out and about during those months to encounter the rats. Interestingly, the Bronx experienced its highest number of sightings in 2021 whereas the other three boroughs experienced theirs in 2022.
+
 ### Figure 6: Rat Sightings 
 ```{r}
  bar_plot <- ggplot(rat_sightings_agg, aes(x = year, y = count)) +
@@ -321,11 +326,12 @@ ggplotly(rats_yr_plot)
 
 ggplotly(bar_plot)
 ```
-**Figure 6.** This bar graph gives a more concrete visual of what was discussed earlier where we can see that although the Bronx generally has less sightings than some of the other boros it experienced an uptick in sightings before the three other boros. 
+**Figure 6.** This bar graph gives a more concrete visual of what was discussed earlier where we can see that although the Bronx generally has less sightings than some of the other boroughs, it experienced an uptick in sightings before the three other boroughs. 
 
 ### Figure 7: Time series of rat sightings
-Given the seasonal nature of the rat sightings we saw plotted in the prior plot we wanted to explore how a time series plot would better visualize the data
-```{r}
+Given the seasonal nature of the rat sightings we saw plotted in the prior plot, we wanted to explore how a time series plot would better visualize the data.
+
+```{r, message=FALSE}
 rat_sightings_tibble <- rat_sightings_agg %>%
   mutate(common_date = paste0(year, "-", month),
          common_date = lubridate::ym(common_date)) %>%
@@ -346,11 +352,11 @@ rats_time_series_plot <- rat_sightings_tibble %>%
 ggplotly(rats_time_series_plot)
 ```
 
-**Figure 7.** This figure further cements the seasonal nature of the rat sightings and does a better job at depicting on the same scale how much the rat sightings jumped following the pandemic. We can also see from this plot that the trash time rule that occured on 04/01/2023 did not make a noticeable impact on the rat sightings and we are assuming by proxy on the rat population.
+**Figure 7.** This figure further cements the seasonal nature of the rat sightings and does a better job at depicting on the same scale how much the rat sightings jumped following the pandemic. We can also see from this plot that the *trash time rule that occured on 04/01/2023 did not make a noticeable impact on the rat sightings and we are assuming by proxy on the rat population.*
 
-### Figure 7: Exploring the forecasting of rat sightings in Brooklyn and the impact of the April 1st Trash Time Change
-Brooklyn has the highest average of rat sightings so a time series decomposition plot with forcasting may shed some light into how the rat sightings would have looked if the trash time rule was not implemented. 
-```{r}
+### Figure 8: Exploring the forecasting of rat sightings in Brooklyn and the impact of the April 1st Trash Time Change
+
+```{r, message=FALSE}
 borough_data <- rat_sightings_tibble %>%
   filter(borough == "Brooklyn")  
 
@@ -389,3 +395,5 @@ rats_rule_impact_plot <- rat_sightings_tibble2 %>%
 
 print(rats_rule_impact_plot)
 ```
+
+**Figure 8.** Brooklyn has the highest average of rat sightings. This time series decomposition plot with forecasting sheds some light into how the rat sightings would have looked if the trash time rule was not implemented.
