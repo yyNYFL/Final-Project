@@ -23,7 +23,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Rat Sightings Analysis
 
-#### ANOVA.
+#### ANOVA
+
 Analysis of variance of the average rat sightings we saw in the 'rat_boro' kable output. We can see that there are differences in the average rat sightings across years and boros so we wanted to explore if thiese diferences were statistically significant through a ANOVA test. 
 
 ```{r import and clean obs, message = FALSE, warning=FALSE}
@@ -242,6 +243,6 @@ Queens: The number of rat sightings in Queens was not significantly different fr
 
 Manhattan: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
 
-Brooklyn: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
+Brooklyn: The number of rat sightings in Brooklyn was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
 
 

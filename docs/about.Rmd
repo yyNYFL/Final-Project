@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Brianna is a 2nd year MPH in Epidemiology candidate pursuing a certificate in Applied Biostatistics. She thinks the rats are doing a better job running the city than most city officials. 
 
-[Personal website](bcarnagie.github.io)
+[Personal website](https://bcarnagie.github.io/bcarnagie.github.io)
 
 ### Jessie
 

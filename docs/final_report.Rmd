@@ -3,6 +3,8 @@ title: <div align="center"> Final Report
 output: 
   html_document:
     code_folding: show
+    toc: true
+    toc_float: true
 ---
 ```{r packages, message = FALSE}
 library(tidyverse)
@@ -56,11 +58,6 @@ The motivation behind this research is rooted in the significant public health c
 As such, this project is  motivated by the need to evaluate public policy effectiveness, particularly in urban wildlife management. By comparing rat sighting data from different time periods and across various NYC neighborhoods, we aim to determine whether the change in trash disposal times has had a significant impact on the rat population. This analysis will not only contribute to public health knowledge but also offer insights for future urban management and rat mitigation strategies.
 
 Last but certainly not least, the viral nature of New York City Sanitation Commissioner Jessica Tisch's declaration, "The rats don't run this city, we do," during the announcement of new rules for garbage disposal back in October 2022, significantly contributes to the motivation behind our project. This statement, which quickly became a social media sensation and inspired a wide array of TikTok videos and even merchandise, has heightened our interest in the issue of rat control in New York City.
-
-
-```{r, echo=FALSE, out.width="40%", fig.cap="", fig.align = 'center'}
-knitr::include_graphics("rats_gonna_hate_this.png") 
-```
 
 ## Related work
 We were guided by some of the in-class exercises we did with the NYC Open Data. The restaurant inspection and NYC Airbnb datasets and the exercises we did with those data helped us throughout some of the initial data importing and cleaning, as well as visualizations. We were also inspired by some of the deliverables other organizations have put out. Despite Mayor Eric Adams strongly advocating (https://www.nyc.gov/office-of-the-mayor/news/539-23/mayor-adams-notches-early-victories-war-rats-first-anti-rat-day-action) that the change in trash pickup times would address New York City’s rat problem, articles such as 
@@ -124,10 +121,7 @@ rat_sightings =
 ```
 
 ### Waste Tonnage: Cleaning and Tidying
-The **monthly waste tonnage** dataset was filtered to have observations from 2022 and 2023 so that the effect of the trash pickup timings in early 2023 is evident. In addition, a new variable `total_organics` was created  as the sum of residential organic waste and school organic waste. The dataset was then grouped by `borough`, `month`, `year` and `borough_id` such that each row of the dataset had `total_organics` and `total_refuse` for each month and each borough in 2022 and 2023. Only variables of interest to our analysis were kept: 
-  * 
-  * 
-  * 
+The **monthly waste tonnage** dataset was filtered to have observations from 2022 and 2023 so that the effect of the trash pickup timings in early 2023 is evident. In addition, a new variable `total_organics` was created  as the sum of residential organic waste and school organic waste. The dataset was then grouped by `borough`, `month`, `year` and `borough_id` such that each row of the dataset had `total_organics` and `total_refuse` for each month and each borough in 2022 and 2023.
   
 ```{r waste cleaning, message=FALSE}
 waste_tonnage = read_csv("./data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
@@ -149,6 +143,17 @@ waste_tonnage = waste_tonnage %>%
 ```
 
 ```{r merge, message=FALSE}
+
+rat_sightings$borough_id <- as.factor(rat_sightings$borough_id)
+rat_sightings$month <- as.factor(rat_sightings$month)
+rat_sightings$year <- as.factor(rat_sightings$year)
+rat_sightings$borough <- as.factor(rat_sightings$borough)
+
+waste_tonnage$borough_id <- as.factor(waste_tonnage$borough_id)
+waste_tonnage$month <- as.factor(waste_tonnage$month)
+waste_tonnage$year <- as.factor(waste_tonnage$year)
+waste_tonnage$borough <- as.factor(waste_tonnage$borough)
+
 rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
 rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(total_refuse)) #filtering out NAs in the dataset
 
@@ -392,7 +397,7 @@ print(rats_rule_impact_plot)
 
 # Statistical Analysis
 
-### ANOVA.
+### Rat Sightings ANOVA
 Analysis of variance of the average rat sightings we saw in the 'rat_boro' kable output. We can see that there are differences in the average rat sightings across years and boros so we wanted to explore if thiese diferences were statistically significant through a ANOVA test. 
 ```{r}
 rat_sightings_agg = rat_sightings |> 
@@ -410,6 +415,7 @@ broom::tidy(anova_result_no_interaction)
 We want to check the assumptions for the ANOVA models ran above. There are three assumptions that should be met when computing an ANOVA:
 
 -The response variable must be quantitative- This is met since the response variable of count of rat sightings is quantitative. -The variance between the groups of average rat sightings by borough and by year should be similar and in this case they are. -Observations should be independent of one another- which we are assuming is satisfied. -The distribution of values within each group of rat sightings by borough is normally distributed which we can see in some of the plots. We can also check the normality of residuals in the below code. From the Normal Q-Q plot of both model residuals the points are quite close to the fitted diagonal line. We also conducted Shapiro-Wilk tests for normality of residuals for both models and with a null hypothesis that the residuals follow a normal distribution and an alternative hypothesis that the residuals does not follow a normal distribution. The p-value for the no interaction model is 0.2694 and the p-value for the interaction model is 0.03883. At a 5% level of significance we can conclude the residuals of the interaction model follow a normal distribution but the residuals for the no interaction model do not follow a normal distribution. 
+
 ###Checking assumptions of ANOVA
 ```{r}
 # Extract residuals for the interaction model
@@ -443,6 +449,156 @@ plot(anova_result_no_interaction$model)
 ```
 
 From the ANOVA test for the model with the interaction which is the model that checked all of the assumptions of an ANOVA test above we can see from the p-value being <0.001 we can reject the null hypotheses and conclude that at least one of the average rat sightings by borough and by year are statistically different.
+
+## Waste Tonnage ANOVA
+
+The dataset was cleaned to ensure accurate and relevant data for analysis. We performed the following steps:
+
+* Standardized column names
+* Parsed and converted date information
+* Filtered data for the years 2022 and 2023
+* Calculated total organics by summing relevant columns
+* Aggregated waste tonnage by borough and date
+
+```{r data cleaning, include=FALSE}
+waste_tonnage = read_csv("data/DSNY_Monthly_Tonnage_Data_20231202.csv") |>
+  clean_names(case = "snake") |>
+  mutate(date_split = strsplit(month, "/")) |>
+  mutate(
+    year = as.integer(sapply(date_split, function(x) x[1])),
+    month = as.integer(sapply(date_split, function(x) x[2]))
+  ) |>
+  filter(year %in% c(2022, 2023)) |>
+  mutate(total_organics = resorganicstons + schoolorganictons) |>
+  group_by(borough, month, year, borough_id) |> 
+  summarise(
+    total_organics = sum(total_organics, na.rm = TRUE),
+    total_refuse = sum(refusetonscollected, na.rm = TRUE)
+  )
+```
+
+We conducted one-way ANOVA tests to compare the total organic and refuse waste tonnage across boroughs. Before interpreting the ANOVA results, we checked the assumptions of normality and homogeneity of variances.
+
+* Homogeneity of variances, the assumption that the variance within each group is the same, was checked using Bartlett’s test. A non-significant result (p > 0.05) would suggest that this assumption holds true.
+* For normality, we examined the residuals of our ANOVA model. The residuals should follow a normal distribution for the ANOVA results to be valid. This was checked using Q-Q plots, where a close alignment of the residuals with the reference line would indicate normality.
+
+
+#### ANOVA Test for Organic Waste Tonnage
+```{r}
+anova_model_organics <- aov(total_organics ~ borough, data = waste_tonnage)
+anova_result_organics <- broom::tidy(anova_model_organics)
+```
+
+
+#### ANOVA Test for Refuse Waste Tonnage
+```{r}
+anova_model_refuse <- aov(total_refuse ~ borough, data = waste_tonnage)
+anova_result_refuse <- broom::tidy(anova_model_refuse)
+```
+
+
+#### Assumption Checks
+```{r}
+# Normality check with Q-Q plots
+qqnorm(anova_model_organics$residuals)
+qqline(anova_model_organics$residuals)
+
+qqnorm(anova_model_refuse$residuals)
+qqline(anova_model_refuse$residuals)
+
+# Homogeneity of variances check with Bartlett's test
+bartlett_test_organics <- bartlett.test(total_organics ~ borough, data = waste_tonnage)
+bartlett_test_refuse <- bartlett.test(total_refuse ~ borough, data = waste_tonnage)
+
+```
+
+```{r}
+# Output ANOVA results
+list(anova_result_organics, anova_result_refuse)
+
+```
+
+
+The one-way ANOVA test was performed to assess the differences in organic waste tonnage among the boroughs. The ANOVA test revealed statistically significant differences in organic waste tonnage among the boroughs (F(4, 112) = 10.5, p < 0.05). 
+
+A one-way ANOVA test was conducted to examine the differences in refuse waste tonnage among the boroughs.The ANOVA test revealed statistically significant differences in refuse waste tonnage among the boroughs (F(4, 112) = 82.1, p < 0.001).
+
+
+### Linear Model 
+
+The rat sightings data set was cleaned to show the number of rat sightings for 2022 and 2023 by year, month, and borough. Then, the rat sightings data was merged with the waste tonnage data by year, month, and borough. 
+
+```{r, message=FALSE}
+
+rat_count_month <- rat_sightings %>% 
+  select(unique_key, month, year, borough, borough_id) %>% 
+  filter(year %in% c("2022", "2023"), borough != "Unspecified") %>%
+  group_by(borough, borough_id, year, month) %>% 
+  summarise(sighting_n = n_distinct(unique_key)) 
+
+
+rat_sightings$borough_id <- as.factor(rat_sightings$borough_id)
+rat_sightings$month <- as.factor(rat_sightings$month)
+rat_sightings$year <- as.factor(rat_sightings$year)
+rat_sightings$borough <- as.factor(rat_sightings$borough)
+
+waste_tonnage$borough_id <- as.factor(waste_tonnage$borough_id)
+waste_tonnage$month <- as.factor(waste_tonnage$month)
+waste_tonnage$year <- as.factor(waste_tonnage$year)
+waste_tonnage$borough <- as.factor(waste_tonnage$borough)
+
+rat_waste_month_merged <- left_join(rat_count_month, waste_tonnage, by = c("borough_id", "month", "year", "borough")) %>%
+  mutate(month = as.character(month),
+         year = as.character(year)) 
+
+```
+
+#### Linear Regression model for the number of rat sightings by total refuse, borough, year, and month.
+```{r}
+rat_sightings_fit <- lm(sighting_n ~ total_refuse + borough + year, data = rat_waste_month_merged)
+
+```
+
+y(Number of Rat Sightings) = Intercept + Total Waste (x~1~) + Borough (x~2~) + Year (x~3~)
+
+
+```{r}
+rat_sightings_fit |> 
+  broom::glance()|> 
+  knitr::kable(digits = 3)
+```
+
+
+With an R^2^ = 0.752, the independent variables (total waste, borough, year) in this model appear to explain about 75.2.2% of the variance in the dependent variable (number of rat sightings).
+
+
+```{r}
+rat_sightings_fit|> 
+  broom::tidy() |> 
+  select(term, estimate, std.error, statistic, p.value) |> 
+  mutate(term = str_replace(term, "^borough", "Borough: ")) |> 
+  mutate(term = str_replace(term, "^total_refuse", "Total Waste")) |> 
+  mutate(term = str_replace(term, "^year", "Year: ")) |> 
+  knitr::kable(digits = 6)
+```
+
+#### Interpretations:
+
+Total Waste
+- For every unit increase in total waste, the number of rat sightings increased by 0.005532, adjusting for borough, and year. At a 5% level of significance, there was a statistically significant relationship between the number of rat sightings and the total waste (_P_<0.001).
+
+
+Year
+-There was not a statistically significant relationship between the number of rat sightings and year at the 5% level of significance (_P_=0.57), adjusting for total waste and year. 
+
+
+Borough:
+
+Queens: The number of rat sightings in Queens was not significantly different from the numnber of rat sightings in the Bronx at the 5% level of significance (_P_=0.007), adjusting for total waste and year. 
+
+Manhattan: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year. 
+
+Brooklyn: The number of rat sightings in Manhattan was significantly different from the number of rat sightings in the Bronx at the 5% level of significance (_P_<0.001), adjusting for total waste and year.
 
 
 ## Discussion: 
