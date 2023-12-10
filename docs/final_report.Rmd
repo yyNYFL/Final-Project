@@ -14,7 +14,6 @@ library(readxl)
 library(lubridate)
 library(readr)
 library(stringr)
-install.packages("forecast")
 library(forecast)
 library(ggplot2)
 library(tibble)
@@ -28,6 +27,7 @@ library(dplyr)
 library(flexdashboard)
 library(leaflet)
 library(shiny)
+library(gtsummary)
 
 library(leaflet.providers)
 
@@ -670,7 +670,7 @@ There was not a statistically significant relationship between the number of rat
 
 
 ## Discussion: 
-What were your findings? Are they what you expect? What insights into the data can you make?
 
-As this will be your only chance to describe your project in detail, make sure that your report is a standalone document that fully describes your process and results. We also expect you to write high-quality code that is understandable to an outside reader. Coding collaboratively and actively reviewing code within the team will help with this!
+Our main finding in regard to the main question we had about the effectiveness of the new trash time rule instated on April 2023  was that it did not have a substantial or significant effect on the rat sightings.  Given the skepticism and pushback we were not expecting the rule to have much of an impact. However, it is worth it to disclaim that although we looked at a main confounder, trash, we could not account for other factors that may be confounding the effect of trash time on rat sightings. Moreover, we are constrained in the time period of the data(2019-2023) which may not capture the effect of the trash time and the major even that occured within the time period, the Covid-19 pandemic.  We did not expect the seasonal nature of trash tonnage and rat sightings. Although it does make sense given that both are related to human activity. The visualization all cemented the seasonal nature of rat sighting as well as the dominance Brooklyn in both trash tonnage and right sightings. Lastly, our analyses support what we saw in the visualizations which was that although the trash tonnage varied significantly by borough and post COVID the trash time rule did not have a significant impact on the rat sightings.
+
 
