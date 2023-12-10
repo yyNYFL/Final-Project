@@ -96,7 +96,9 @@ In order to analyze **the rat sightings** dataset, we used 2 data sources from N
  * `location`: Specific coordinates of the sighting, offering detailed geographical information in regards to latitude and longitude.
  * `borough_id`: This variable was created based on `borough` and assigns a numeric value to each of the 4 boroughs represented in our dataset. This was                  done to facilitate the dataset merging later on. 
  
-```{r import and clean obs, message = FALSE, warning=FALSE}
+
+```{r import and clean rat sightings, message = FALSE, warning=FALSE}
+
 
 rat_sightings = 
   read_csv ("./data/Rat_Sightings.csv") |>
@@ -122,16 +124,18 @@ rat_sightings =
   )
 ```
 
-### Waste Tonnage: Cleaning and Tidying
+## Data cleaning and tidying 
+In order to analyze **the rat sightings** dataset, we used 2 data sources from NYC Open Data: 311 Rat Sightings and Monthly tonnage data from the NYC Department of Sanitation. The 311 Rat Sightings data was filtered to exclude observations from Staten Island since there was significantly less data from that borough. This decision aims to maintain consistency and reliability in our analysis by focusing on areas with more robust data. Since the data set contained data from more than 230,000 rat sighting reports from 2010 until present-day, we filtered it to only include data from 2019-2023. Variable `created_date` was separated to create three new variables to allow for analysis: `month`, `day`, `year`. These new variables and variables of interest to our analysis were kept: 
 
-The **monthly waste tonnage** dataset was filtered to have observations from 2022 and 2023 so that the effect of the trash pickup timings in early 2023 is evident. In addition, a new variable `total_organics` was created  as the sum of residential organic waste and school organic waste. The dataset was then grouped by `borough`, `month`, `year` and `borough_id` such that each row of the dataset had `total_organics` and `total_refuse` for each month and each borough in 2022 and 2023. Only unique variables of interest to our analysis from this dataset that were kept: 
+ * `unique_key`: A unique identifier for each rat sighting report.
+ * `location_type`: The type of location where the rat sighting was reported, providing context to the environment of these sightings.
+ * `incident_zip`: The ZIP code of the reported sighting, allowing for geographical analysis.
+ * `borough`: The borough where the sighting occurred, crucial for comparing sightings across different areas of the city.
+ * `location`: Specific coordinates of the sighting, offering detailed geographical information in regards to latitude and longitude.
+ * `borough_id`: This variable was created based on `borough` and assigns a numeric value to each of the 4 boroughs represented in our dataset. This was                  done to facilitate the dataset merging later on. 
 
-  * `borough_id`: Existing column that uniquely identifies each NYC borough
-  * `total_organics`: Sum of total tons of residential and school organics (food-scraps, food soiled paper and yard waste) in the borough.
-  * `total_refuse`: Sum of total tons of trash collected in residences and institutions by the NYC Department of Sanitation.
-  
-```{r waste cleaning, message=FALSE}
-waste_tonnage = read_csv("./data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
+```{r data cleaning waste, message = FALSE}
+waste_tonnage = read_csv("data/DSNY_Monthly_Tonnage_Data_20231202.csv") %>%
   clean_names(case = "snake") %>%
   mutate(date_split = strsplit(month, "/")) %>%
   mutate(
@@ -147,25 +151,20 @@ waste_tonnage = waste_tonnage %>%
     total_organics = sum(total_organics, na.rm = TRUE),
     total_refuse = sum(refusetonscollected, na.rm = TRUE)
     )
+class(waste_tonnage$borough_id)
+
 ```
 
-```{r merge, message=FALSE}
+The **monthly waste tonnage** dataset was filtered to have observations from 2022 and 2023 so that the effect of the trash pickup timings in early 2023 is evident. In addition, a new variable `total_organics` was created  as the sum of residential organic waste and school organic waste. The dataset was then grouped by `borough`, `month`, `year` and `borough_id` such that each row of the dataset had `total_organics` and `total_refuse` for each month and each borough in 2022 and 2023. Only unique variables of interest to our analysis from this dataset that were kept: 
 
-rat_sightings$borough_id <- as.factor(rat_sightings$borough_id)
-rat_sightings$month <- as.factor(rat_sightings$month)
-rat_sightings$year <- as.factor(rat_sightings$year)
-rat_sightings$borough <- as.factor(rat_sightings$borough)
+  * `borough_id`: Existing column that uniquely identifies each NYC borough
+  * `total_organics`: Sum of total tons of residential and school organics (food-scraps, food soiled paper and yard waste) in the borough.
+  * `total_refuse`: Sum of total tons of trash collected in residences and institutions by the NYC Department of Sanitation.
 
-waste_tonnage$borough_id <- as.factor(waste_tonnage$borough_id)
-waste_tonnage$month <- as.factor(waste_tonnage$month)
-waste_tonnage$year <- as.factor(waste_tonnage$year)
-waste_tonnage$borough <- as.factor(waste_tonnage$borough)
-
+```{r merging, include=FALSE}
 rat_waste_merged = left_join(rat_sightings, waste_tonnage, by = c("borough_id", "month", "year", "borough"))
 rat_waste_filtered = subset(rat_waste_merged, !is.na(total_organics) & !is.na(total_refuse)) #filtering out NAs in the dataset
-
 ```
-
 We used the `left_join` function from the `dplyr` package to merge the rat sightings data with the waste tonnage data. We chose to merge based on `borough_id`, `month`, `year`, and `borough`. This approach ensures that each rat sighting record is aligned with the corresponding waste tonnage data based on both geographical (borough) and temporal (month and year) factors. After merging, we applied a filtering step to remove rows with missing values in the `total_organics` and `total_refuse` columns. 
 
 ## Exploratory analysis
@@ -615,11 +614,11 @@ rat_count_month <- rat_sightings %>%
   filter(year %in% c("2022", "2023"), borough != "Unspecified") %>%
   group_by(borough, borough_id, year, month) %>% 
   summarise(sighting_n = n_distinct(unique_key)) 
+class(rat_count_month$borough_id)
 
-
-rat_waste_month_merged = left_join(rat_count_month, waste_tonnage, by = c("borough_id", "month", "year", "borough"))%>% 
-  mutate(month=as.character(month),
-         year=as.character(year))
+rat_waste_month_merged = left_join(rat_count_month, waste_tonnage, by = c("borough_id", "month", "year", "borough")) %>% 
+  mutate(month = as.character(month),
+         year = as.character(year))
 ```
 
 #### Linear Regression model for the number of rat sightings by total refuse, borough, year, and month.
