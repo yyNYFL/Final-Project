@@ -37,3 +37,10 @@ Data regarding trash and waste are from the [NYC Open Data's Monthly tonnage dat
 
 DSNY Monthly Tonnage Data provides monthly collection tonnages that the Department of Sanitation collects from NYC residences and institutions. It was downloaded and imported with observations as of December 2, 2023. 
 
+### Screencast
+
+```{r, echo=FALSE, out.width="30%", fig.cap="", fig.align = 'center'}
+knitr::include_graphics("screencast.mp4") 
+```
+
+
