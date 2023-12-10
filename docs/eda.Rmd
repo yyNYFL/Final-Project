@@ -4,37 +4,29 @@ output:
   html_document:
     code_folding: show
 ---
+
 ```{r setup, include=FALSE,  message = FALSE}
 library(tidyverse)
-library(readr)
-library(janitor)
-library(dplyr)
 library(ggplot2)
 library(stats)
 library(forecast)
-library(stats)
 library(tidyr)
 library(readxl)
 library(stringr)
+library(gtsummary)
+library(gt)
 library(patchwork)
 library(gridExtra)
 library(knitr)
-library(tidyverse)
 library(janitor)
-library(knitr)
-library(tidyr)
-library(readxl)
 library(lubridate)
 library(readr)
-library(stringr)
-library(ggplot2)
 library(tibble)
 library(dbplyr)
-library(stats)
 library(plotly)
 library(ggridges)
-library(patchwork)
 library(dplyr)
+library(sjlabelled)  
 library(flexdashboard)
 library(leaflet)
 library(shiny)
@@ -133,6 +125,29 @@ We used the `left_join` function from the `dplyr` package to merge the rat sight
 ## Visualizations for waste tonnage data
 
 First, we did exploratory analysis via different visualizations for waste tonnage data. 
+
+```{r}
+print(names(rat_waste_merged))
+
+rat_waste_merged %>%
+  select(borough, location_type, total_organics, total_refuse) %>%
+  tbl_summary(type = list(borough ~ "categorical", 
+                          location_type ~ "categorical",
+                          total_organics ~ "continuous", 
+                          total_refuse ~ "continuous"), 
+              statistic = list(all_continuous() ~ "{mean} ({sd})"), 
+              digits = all_continuous() ~ 1,
+              label = list(c(borough) ~ "Borough",
+                           c(location_type) ~ "Location Type",
+                           c(total_organics) ~ "Total Organic Waste (Tonnes)",
+                           c(total_refuse) ~ "Total Waste (Tonnes)")) %>%
+  bold_labels()  %>%
+  as_gt() %>%             # convert to gt table
+  gt::gtsave(             # save table as image
+    filename = "table_1_new.png"
+  )
+```
+
 
 ### Figure 1: Trash Tonnage by Borough, 2022 - 2023
 ```{r figure 1, message = FALSE}
